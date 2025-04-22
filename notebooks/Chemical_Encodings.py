@@ -1,5 +1,3 @@
-
-
 import marimo
 
 __generated_with = "0.13.0"
@@ -9,6 +7,9 @@ app = marimo.App(width="medium", app_title="Chemical encodings")
 @app.cell
 def _():
     import marimo as mo
+    import warnings
+
+    warnings.filterwarnings("ignore")
     return (mo,)
 
 
@@ -44,12 +45,9 @@ def _(mo):
 
 @app.cell
 def _():
-    import warnings
     from baybe.surrogates.gaussian_process.presets.edbo import EDBOKernelFactory
     from baybe.recommenders import TwoPhaseMetaRecommender, BotorchRecommender
     from baybe.surrogates import GaussianProcessSurrogate
-
-    warnings.filterwarnings("ignore")
 
     recommender = TwoPhaseMetaRecommender(
         recommender=BotorchRecommender(
@@ -63,7 +61,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""This examples uses the same basic example like the `Reaction_Optimization` notebook. However, we now use different encodings of the chemical parameters. The encoding that should be used can be described by the `encoding` field. We investigate three different encodings here and create one campaign per chemical encoding.""")
+    mo.md(
+        """This examples uses the same basic example like the `Reaction_Optimization` notebook. However, we now use different encodings of the chemical parameters. The encoding that should be used can be described by the `encoding` field. We investigate three different encodings here and create one campaign per chemical encoding."""
+    )
     return
 
 
@@ -85,7 +85,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""Now that we have the data collected, we can creaate different campaigns that we want to compare against each other. To facilitate the usage of `BayBE`'s simulation capabilities, we collect the different campaigns in a `dict`.""")
+    mo.md(
+        """Now that we have the data collected, we can creaate different campaigns that we want to compare against each other. To facilitate the usage of `BayBE`'s simulation capabilities, we collect the different campaigns in a `dict`."""
+    )
     return
 
 
@@ -146,7 +148,9 @@ def _(df, recommender, substances):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""Of course, we also want to compare the campaigns using the chemical encodings to other campaigns not using the special encoding.""")
+    mo.md(
+        """Of course, we also want to compare the campaigns using the chemical encodings to other campaigns not using the special encoding."""
+    )
     return
 
 
@@ -161,15 +165,17 @@ def _(
     substances,
 ):
     ohe_parameters = [
-        CategoricalParameter(name="Solvent_Name",
-                        values=substances["solvents"], encoding="OHE"),
-        CategoricalParameter(name="Base_Name", values=substances["bases"], encoding="OHE"),
-        CategoricalParameter(name="Ligand_Name",
-                        values=substances["ligands"], encoding="OHE"),
-        NumericalDiscreteParameter(name="Temp_C", values=[90, 105, 120], tolerance=2),
-        NumericalDiscreteParameter(
-            name="Concentration", values=[0.057, 0.1, 0.153], tolerance=0.005
+        CategoricalParameter(
+            name="Solvent_Name", values=substances["solvents"], encoding="OHE"
         ),
+        CategoricalParameter(
+            name="Base_Name", values=substances["bases"], encoding="OHE"
+        ),
+        CategoricalParameter(
+            name="Ligand_Name", values=substances["ligands"], encoding="OHE"
+        ),
+        NumericalDiscreteParameter(name="Temp_C", values=[90, 105, 120]),
+        NumericalDiscreteParameter(name="Concentration", values=[0.057, 0.1, 0.153]),
     ]
     campaign_ohe = Campaign(
         searchspace=SearchSpace.from_product(parameters=ohe_parameters),
@@ -200,8 +206,8 @@ def _(df, scenarios):
     from baybe.simulation import simulate_scenarios
 
     BATCH_SIZE = 2
-    N_DOE_ITERATIONS = 3 # Change to ~15 for better plots
-    N_MC_ITERATIONS = 5 # Change to ~25 for better plots
+    N_DOE_ITERATIONS = 10  # Change to ~15 for better plots
+    N_MC_ITERATIONS = 15  # Change to ~25 for better plots
 
     results = simulate_scenarios(
         scenarios,
@@ -224,7 +230,9 @@ def _(df, scenarios):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""We now visualize the results using the `backtest_plot` utility. This utility "averages" the individual Monte Carlo iterations and shows the mean and a confidence interval. It can also be used to give visual guidance on the performance of individual scenarios.""")
+    mo.md(
+        """We now visualize the results using the `backtest_plot` utility. This utility "averages" the individual Monte Carlo iterations and shows the mean and a confidence interval. It can also be used to give visual guidance on the performance of individual scenarios."""
+    )
     return
 
 

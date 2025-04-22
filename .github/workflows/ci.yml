@@ -1,4 +1,4 @@
-name: Test notebooks
+name: Continous Integration
 
 on:
   pull_request:
@@ -7,6 +7,7 @@ on:
 
 jobs:
   test-notebooks:
+    name: "Test all notebooks"
     runs-on: ubuntu-latest
     
     steps:
@@ -48,7 +49,7 @@ jobs:
           fi
         done
 
-    changelog:
+  changelog:
     name: "Changelog"
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' }}

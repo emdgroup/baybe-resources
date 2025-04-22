@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Notebook on transfer learning
 - Notebook on chemical encodings
 - CODEOWNERS file
 - Notebook on reaction optimization

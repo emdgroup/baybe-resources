@@ -1,0 +1,2 @@
+baybe[chem,simulation]==0.13.0
+seaborn == 0.13.2

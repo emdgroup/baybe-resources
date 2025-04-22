@@ -3,12 +3,15 @@
 import marimo
 
 __generated_with = "0.13.0"
-app = marimo.App(width="full")
+app = marimo.App(app_title="Reaction Optimization")
 
 
 @app.cell
 def _():
     import marimo as mo
+    import warnings
+
+    warnings.filterwarnings("ignore")
     return (mo,)
 
 
@@ -62,6 +65,8 @@ def _(mo):
         5. **Temperature:** We can chose from one of 3 available temperatures.
 
         Consequently, this means that we have **1728** different potential experiments that we could run. However, we sould like to identify the optimal conditions with only a small number of experiments. Fortunately, Shields and coworkers have investigated all 1728 combinations and provided a table with the conditions and corresponding yields.
+
+        Note that only 18 out of the 1728 potential experiments have a yield within the top 10 percent!
         """
     )
     return
@@ -78,7 +83,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""We will begin by identifying 10 initial reaction conditions. In practice, we would then run experiments to evaluate these conditions and record the corresponding reaction yields. However, in this case, we will look up the yields in a table. With the conditions and yields in hand, we can build a Bayesian model and use this model to select another 5 reaction conditions. We will then look up the yields for the 5 conditions and use this information to update the model. We will repeat this process through 5 rounds of optimization and examine the reaction yields for each optimization cycle.""")
+    mo.md(r"""We will begin by identifying 10 initial reaction conditions. In practice, we would then run experiments to evaluate these conditions and record the corresponding reaction yields. However, in this case, we will look up the yields in a table. With the conditions and yields in hand, we can build a Bayesian model and use this model to select another 5 reaction conditions. We will then look up the yields for the 5 conditions and use this information to update the model. We will repeat this process through 5 rounds of optimization and examine the reaction yields for each optimization cycle.""")
     return
 
 
@@ -96,16 +101,6 @@ def _(mo):
         4. [**Recommender**](https://emdgroup.github.io/baybe/0.13.0/userguide/recommenders.html): The recommender selects the next set of experiments to be performed. In this case, we use the [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.13.0/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender behaves differently depending on whether it has experimental data. At the beginning of an optimization process, we typically don't have experimental data and want to find a diverse set of conditions to gather some initial data. If the `TwoPhaseMetaRecommender` has no data available, it uses Farthest Point Sampling to select a diverse set of initial conditions. If the recommender has data, it uses the [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.13.0/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html), a Bayesian optimizer that balances exploration and exploitation when selecting sets of reaction conditions.
         5. [**Campaign**](https://emdgroup.github.io/baybe/0.13.0/userguide/campaigns.html): In `BayBE`, the search space, objective, and recommender are combined into an `campaign` object. The Campaign has two important methods: `recommend`, which recommends the next set of experiments, and `add_measurements', which adds a set of experiments and updates the underlying Bayesian model.
         """
-    )
-    return
-
-
-@app.cell
-def _(mo):
-    mo.image(
-        src="diagrams/schematic_overview.drawio.svg",
-        caption="Schematic overview of the different concepts.",
-        height="300px",
     )
     return
 

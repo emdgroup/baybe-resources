@@ -1,5 +1,3 @@
-
-
 import marimo
 
 __generated_with = "0.13.0"
@@ -49,21 +47,10 @@ def _(mo):
 
 @app.cell
 def _():
-    import warnings
     import pandas as pd
-
-    warnings.filterwarnings("ignore")
 
     temperatures = [90, 105, 120]
     concentrations = [0.057, 0.1, 0.153]
-    ylims = {  # y axis limits for consistency
-        90: [15, 90],
-        105: [25, 105],
-        120: [30, 105],
-        0.057: [20, 100],
-        0.1: [20, 95],
-        0.153: [20, 105],
-    }
     parameters_to_analyze = {
         "temperature": temperatures,
         "concentration": concentrations,
@@ -189,6 +176,7 @@ def _(parameters_to_analyze, units):
             # show the legend
             ax.legend()
             plt.show()
+
     return Path, analyze_data, plt
 
 
@@ -233,7 +221,7 @@ def _(concentrations, pd):
         "solvents": create_dict_from_columns(df, "Solvent_Name", "Solvent_SMILES"),
     }
 
-    parameters=[
+    parameters = [
         SubstanceParameter(
             name="Solvent_Name",
             data=substances["solvents"],
@@ -252,9 +240,7 @@ def _(concentrations, pd):
         ),
     ]
 
-    objective = SingleTargetObjective(
-        NumericalTarget(name="yield", mode="MAX")
-    )
+    objective = SingleTargetObjective(NumericalTarget(name="yield", mode="MAX"))
     return objective, parameters
 
 
@@ -281,7 +267,8 @@ def _(objective, parameters, temperatures):
     tl_campaigns = {
         temp: Campaign(
             searchspace=SearchSpace.from_product(
-                parameters=parameters+[
+                parameters=parameters
+                + [
                     TaskParameter(
                         name="Temp_C",
                         values=[str(t) for t in temperatures],
@@ -320,14 +307,18 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
 
     from baybe.utils.random import set_random_seed
 
-    N_DOE_ITERATIONS = 7
+    N_DOE_ITERATIONS = 2
     BATCH_SIZE = 2
-    N_MC_ITERATIONS = 5
+    N_MC_ITERATIONS = 3
     set_random_seed(1337)
 
     sample_fractions = [0.01, 0.1]
 
-    def optimize_for_temperature(temp: str, tl_campaigns: dict[str, Campaign]=tl_campaigns, data: pd.DataFrame = data):
+    def optimize_for_temperature(
+        temp: str,
+        tl_campaigns: dict[str, Campaign] = tl_campaigns,
+        data: pd.DataFrame = data,
+    ):
 
         lookup_T = data.copy(deep=True)
         lookup_T["Temp_C"] = lookup_T["Temp_C"].astype(str)
@@ -374,6 +365,7 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
         )
 
         return results
+
     return (optimize_for_temperature,)
 
 

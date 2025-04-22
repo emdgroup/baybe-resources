@@ -1,0 +1,49 @@
+name: Test notebooks
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-notebooks:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run notebook scripts
+      run: |
+        for script in notebooks/*.py; do
+          if [ -f "$script" ]; then
+            # Skip utils.py
+            filename=$(basename "$script")
+            if [ "$filename" = "utils.py" ]; then
+              echo "Skipping utils.py"
+              continue
+            fi
+            
+            # Extract the filename without extension
+            filename=$(basename "$script" .py)
+            
+            # Check if there's a specific requirements file for this script
+            if [ -f "additional_requirements/${filename}_requirements.txt" ]; then
+              echo "Installing additional requirements for $filename"
+              pip install -r "additional_requirements/${filename}_requirements.txt"
+            fi
+            
+            echo "Running $script"
+            python "$script"
+          fi
+        done

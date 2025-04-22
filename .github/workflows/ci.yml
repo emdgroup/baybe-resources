@@ -1,0 +1,70 @@
+name: Continous Integration
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-notebooks:
+    name: "Test all notebooks"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run notebook scripts
+      run: |
+        for script in notebooks/*.py; do
+          if [ -f "$script" ]; then
+            # Skip utils.py
+            filename=$(basename "$script")
+            if [ "$filename" = "utils.py" ]; then
+              echo "Skipping utils.py"
+              continue
+            fi
+            
+            # Extract the filename without extension
+            filename=$(basename "$script" .py)
+            
+            # Check if there's a specific requirements file for this script
+            if [ -f "additional_requirements/${filename}_requirements.txt" ]; then
+              echo "Installing additional requirements for $filename"
+              pip install -r "additional_requirements/${filename}_requirements.txt"
+            fi
+            
+            echo "Running $script"
+            python "$script"
+          fi
+        done
+
+  changelog:
+    name: "Changelog"
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert Changelog Edit
+        run: |
+          git fetch origin main:main
+          NUM_ADDED=`git diff --numstat main HEAD CHANGELOG.md | cut -d$'\t' -f1`
+          echo "Changelog differences: $NUM_ADDED"
+          if [ "$NUM_ADDED" -gt "0" ]; then
+            echo "SUCCESS"
+            exit 0
+          else
+            echo "ERROR - Nothing has been added to CHANGELOG.md"
+            exit 1
+          fi
+

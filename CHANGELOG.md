@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Add CODEOWNERS
 - Notebook on reaction optimization
 - CI tests for execution of notebooks and changes in CHANGELOG
 - Basic description and infrastructure

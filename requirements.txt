@@ -1,2 +1,3 @@
-baybe==0.14.2
+baybe[dev]==0.14.2
 marimo==0.19.7
+seaborn==0.13.2

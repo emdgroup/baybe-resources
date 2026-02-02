@@ -20,8 +20,7 @@ mamba create --yes --name baybe-resources python=3.13
 mamba activate baybe-resources
 ```
 if you use `mamba`.
-2. Install the additional dependencies from `requirements.txt` via `pip install -r requirements.txt`.
-3. Depending on which example you want to investigate, you might need to install the additional dependencies in the corresponding folders.
+2. Install the additional dependencies from `requirements.txt` via `pip install -r requirements.txt`. Note that this installs all optional dependencies for BayBE as well as for all tutorials to avoid the need of having to re-install example-specific additional dependencies.
 
 ## 👨🏻‍🔧 Maintainers
 

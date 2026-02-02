@@ -18,14 +18,14 @@ def _(mo):
     mo.md(r"""
     # Transfer learning
 
-    This file contains some examples regarding to the topic of **transfer learning**. It demonstrates how to use `BayBE's` transfer learning capabilities to improve the performance of campaigns if data from similar campaigns is available.
+    This file contains some examples regarding to the topic of **transfer learning**. It demonstrates how to use BayBE's transfer learning capabilities to improve the performance of campaigns if data from similar campaigns is available.
 
-    /// admonition | Note
-    The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of `BayBE`.
+    /// Note
+    The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of BayBE.
     ///
 
-    /// admonition | Note
-    To really see the effects of transfer learning, it is necessary to run longer tests. Since the goal of this notebook is to demonstrate how to use and set up transfer learning in BayBE, the results obtained by just executing this notebook might not be representative. We thus refer to our [documentation](https://emdgroup.github.io/baybe/0.14.2/) for more detailed plots.
+    /// Note
+    To really see the effects of transfer learning, it is necessary to run longer tests than the ones presented in this notebook. Since the goal of this notebook is to demonstrate how to use and set up transfer learning in BayBE, the results obtained by just executing this notebook might not be representative. We thus refer to our [documentation](https://emdgroup.github.io/baybe/0.14.2/) for more detailed plots.
     ///
     """)
     return
@@ -45,37 +45,36 @@ def _(mo):
 def _():
     import pandas as pd
 
-    temperatures = [90, 105, 120]
-    concentrations = [0.057, 0.1, 0.153]
-    parameters_to_analyze = {
-        "temperature": temperatures,
-        "concentration": concentrations,
-    }
-    units = {"temperature": "°C", "concentration": "mol / l"}
-
     data = pd.read_csv("data/shields.csv")
     data
-    return concentrations, data, parameters_to_analyze, pd, temperatures, units
+    return data, pd
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Data visualization: Correlation of Data Between Different Temperatures
+    ## Figuring out if transfer learning should be used at all
 
-    We first visualize the data, using a small helper function that is defined in the next cell.
+    The first step of a potential transfer learning workflow should always be a detailed analysis of the data. The reason is that transfer learning assume that there is some positive correlation in the data which can then be leveraged. If there is no such positive correlation, then transfer learning is not the correct tool to use, and attempting to use can even be harmful.
+
+    In this example, we want to evaluate if we can use transfer learning for leveraging knowledge that we gained for reactions on two temperatures for the third temperature. We thus begin by visualizing the data, using a small helper function that is defined in the next cell.
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(parameters_to_analyze, units):
+def _():
     import matplotlib.pyplot as plt
     from pathlib import Path
     from collections import defaultdict
     import csv
     from itertools import combinations
     import scipy.stats as stats
+
+    temperatures = [90, 105, 120]
+    concentrations = [0.057, 0.1, 0.153]
+    units = {"temperature": "°C", "concentration": "mol / l"}
+    parameters_to_analyze = {"temperature": temperatures, "concentration": concentrations}
 
     def analyze_data(file_path: Path, parameter_to_analyze: str):
         data = defaultdict(lambda: defaultdict(list))
@@ -170,7 +169,17 @@ def _(parameters_to_analyze, units):
             # show the legend
             ax.legend()
             plt.show()
-    return Path, analyze_data, plt
+    return Path, analyze_data, concentrations, plt, temperatures
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    /// admonition | Task
+    The helper function is written in a generic way, allowing to also investigate other potential parameters. Instead of investigating whether the temperature is a suitable candidate for transfer learning, investigate whether or not the concentration could also be used.
+    ///
+    """)
+    return
 
 
 @app.cell
@@ -182,7 +191,7 @@ def _(Path, analyze_data):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Setting up the `BayBE` campaign
+    ## Setting up the BayBE campaign
 
     After we have analyzed the data and came to the conclusion that we want to approach this optimization with transfer learning, we now set up our `BayBE` campaign. We first begin by collecting all parts of the campaign that are not related to Transfer Learning.
 
@@ -294,9 +303,9 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
 
     from baybe.utils.random import set_random_seed
 
-    N_DOE_ITERATIONS = 2
+    N_DOE_ITERATIONS = 25
     BATCH_SIZE = 2
-    N_MC_ITERATIONS = 3
+    N_MC_ITERATIONS = 40
     set_random_seed(1337)
 
     sample_fractions = [0.01, 0.1]

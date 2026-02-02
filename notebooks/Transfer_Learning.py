@@ -24,8 +24,8 @@ def _(mo):
     The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of BayBE.
     ///
 
-    /// Note
-    To really see the effects of transfer learning, it is necessary to run longer tests than the ones presented in this notebook. Since the goal of this notebook is to demonstrate how to use and set up transfer learning in BayBE, the results obtained by just executing this notebook might not be representative. We thus refer to our [documentation](https://emdgroup.github.io/baybe/0.14.2/) for more detailed plots.
+    /// Caution
+    To really see the effects of transfer learning, it is necessary to run longer tests than the ones presented in this notebook. Since the goal of this notebook is to demonstrate how to use and set up transfer learning in BayBE, the results obtained by just executing this notebook might not be representative. We provide a pre-computed version in the `images` subfolder.
     ///
     """)
     return
@@ -191,11 +191,19 @@ def _(Path, analyze_data):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Since the data is positively correlated, this is indeed a use case in which transfer learning can be used. We thus continue with describing how we can now setup BayBE to leverage this.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Setting up the BayBE campaign
 
     After we have analyzed the data and came to the conclusion that we want to approach this optimization with transfer learning, we now set up our `BayBE` campaign. We first begin by collecting all parts of the campaign that are not related to Transfer Learning.
 
-    ///admonition | Note
+    /// Note
     This example uses substance encodings. In case you are interested in more details on them, check out the `ChemicalEncodings` example!
     ///
     """)
@@ -288,10 +296,12 @@ def _(mo):
 
     We now set up the simulation loop. This requires us to define the number of DoE iterations as well as the number of Monte Carlo iterations.
 
-    Since we want to investigate the influence of Transfer Learning, we will provide the campaigns with batches of initial data from the temperatures that are *not* being active for the corresponding campaign. For each Monte Carlo iteration, we sample a different batch of initial data that is then being used by the algorithm. In addition, we compare the results to a "baseline" that is not using any Transfer Learning.
+    Since we want to investigate the influence of Transfer Learning, we will provide the campaigns with batches of initial data from the temperatures that are *not* being active for the corresponding campaign. The percentage of points sampled for this is given in the `SAMPLED_FRACTIONS` list. For each Monte Carlo iteration, we sample a different batch of initial data that is then being used by the algorithm. In addition, we compare the results to a "baseline" that is not using any Transfer Learning.
 
-    ///admonition | Note
-    To really see the impact of Transfer Learning, you need to run the following code with more Monte Carlo Iterations, which might take quite some time. If you are interested in looking at some pre-computed results, have a look at the corresponding `.ipynb` version of this notebook.
+    /// Caution
+    Leveraging existing data requires a significant amount of data, in particular when we want to compare different amounts of sampled data. The execution can thus take quite some time if using settings that really show the effect.
+
+    To really see the impact of Transfer Learning, you need to run the following code with more Monte Carlo Iterations, which might take quite some time. If you are interested in looking at some pre-computed results, have a look at the pre-computed image in the `images` subfolder.
     ///
     """)
     return
@@ -303,17 +313,18 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
 
     from baybe.utils.random import set_random_seed
 
-    N_DOE_ITERATIONS = 25
+    N_DOE_ITERATIONS = 2
     BATCH_SIZE = 2
-    N_MC_ITERATIONS = 40
+    N_MC_ITERATIONS = 3
     set_random_seed(1337)
 
-    sample_fractions = [0.01, 0.1]
+    SAMPLE_FRACTIONS = [0.01, 0.05, 0.1, 0.15]
 
     def optimize_for_temperature(
         temp: str,
         tl_campaigns: dict[str, Campaign] = tl_campaigns,
         data: pd.DataFrame = data,
+        sample_fractions: list[int] = SAMPLE_FRACTIONS
     ):
 
         lookup_T = data.copy(deep=True)
@@ -367,7 +378,7 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    We now finally run the simulation code and investigate the results.
+    We now finally run the simulation code and investigate the results. The variable `temp_to_investigate` can be changed to any of the available temperatures.
     """)
     return
 
@@ -376,15 +387,38 @@ def _(mo):
 def _(mo, optimize_for_temperature, plt):
     from utils import backtest_plot
 
-    temp_to_investigate = 105
+    TEMP_TO_INVESTIGATE = 105
 
     backtest_plot(
-        df=optimize_for_temperature(temp_to_investigate),
+        df=optimize_for_temperature(TEMP_TO_INVESTIGATE),
         x="Number of experiments",
         y="Running best yield",
         hue="% of data used",
     )
     mo.mpl.interactive(plt.gcf())
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The following image shows the pre-computed result that was obtained with the following settings:
+    * `SAMPLED_FRACTIONS = [0.01, 0.05, 0.1, 0.15]`
+    * `N_DOE_ITERATIONS = 30`
+    * `BATCH_SIZE = 2`
+    * `N_MC_ITERATIONS = 40`
+    * `TEMP_TO_INVESTIGAETE = 105`
+
+    It demonstrates that already a little data can help in the beginning of an experimental campaign, and that although more data is more favourable, the effects are diminishing at some point.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.image(
+        src="images/transfer_learning_precomputed.png", caption="Reaction being optimized in this tutorial."
+    )
     return
 
 

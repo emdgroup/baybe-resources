@@ -324,7 +324,7 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
         temp: str,
         tl_campaigns: dict[str, Campaign] = tl_campaigns,
         data: pd.DataFrame = data,
-        sample_fractions: list[int] = SAMPLE_FRACTIONS
+        sample_fractions: list[float] = SAMPLE_FRACTIONS
     ):
 
         lookup_T = data.copy(deep=True)

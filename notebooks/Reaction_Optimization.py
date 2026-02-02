@@ -18,11 +18,19 @@ def _(mo):
     mo.md(r"""
     # Using BayBE to optimize Reaction Conditions
 
-    This notebook contains an example on how to use BayBE for the optimization of reaction conditions. It is inspired by the corresponding notebook developed by Pat Walters as part of his [Practical Cheminformatics Tutorial](https://github.com/PatWalters/practical_cheminformatics_tutorials).
+    This notebook contains an example on how to use BayBE for the optimization of reaction conditions. It is inspired by the corresponding notebook developed by Pat Walters as part of his [Practical Cheminformatics Tutorial](https://github.com/PatWalters/practical_cheminformatics_tutorials). This notebook assumes basic familiarity with the core concepts of Bayesian Optimization. The intention of this notebook is *not* to introduce and explain all aspects of Bayesian Optimization, but to focus on the usage of BayBE.
 
     In drug discovery, we frequently encounter situations where we need to modify a set of reaction conditions to optimize the yield. This notebook shows how to use BayBE to model and optimize such a campaign.
 
-    **Note:** We assume basic familiarity with the core concepts of Bayesian Optimization. The intention of this notebook is *not* to introduce and explain all aspects of Bayesian Optimization, but to focus on the usage of BayBE.
+    # Chemical encodings
+
+    This notebook demonstrates the power and usefulness of BayBE's chemical encodings. If parameters in a process to be optimized are chemicals, this feature enables BayBE to automatically use meaningful chemical descriptors, automatically leveraging chamical knowledge for the optimization process.
+
+    This notebook assumes some basic familiarity with using BayBE, and that it does not explain all of the core concepts. If you are interested in those, we recommend to first check out the `Reation_Optimization` example.
+
+    /// caution
+    This notebook was developed for BayBE version 0.14.2. Although we do our best in keeping our breaking changes minimal and support outdated versions for a long time, this notebook might not be immediately applicable for other BayBE versions. If you install BayBE via the instructions in this repository, version 0.14.2 will thus be installed.
+    ///
     """)
     return
 
@@ -33,7 +41,6 @@ def _(mo):
     ## Introduction
 
     In this notebook, we consider a reaction described in the supporting material of a 2020 paper by [Shields et al.](https://www.nature.com/articles/s41586-021-03213-y), in which the following reaction should be optimized:
-    `
     """)
     return
 
@@ -57,9 +64,7 @@ def _(mo):
     4. **Concentration:** We can choose from one of 3 available concentrations.
     5. **Temperature:** We can chose from one of 3 available temperatures.
 
-    Consequently, this means that we have **1728** different potential experiments that we could run. However, we sould like to identify the optimal conditions with only a small number of experiments. Fortunately, Shields and coworkers have investigated all 1728 combinations and provided a table with the conditions and corresponding yields.
-
-    Note that only 18 out of the 1728 potential experiments have a yield within the top 10 percent!
+    Consequently, this means that we have **1728** different potential experiments that we could run. Fortunately, Shields and coworkers have investigated all 1728 combinations and provided a table with the conditions and corresponding yields. Note that only 18 out of the 1728 potential experiments have a yield within the top 10 percent!
     """)
     return
 
@@ -76,6 +81,8 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Our goal is to identify one of the top candidates, that is, one of the 18 experiments with a yield larger than 90 using only a few experiments.
+
     We will begin by identifying 10 initial reaction conditions. In practice, we would then run experiments to evaluate these conditions and record the corresponding reaction yields. However, in this case, we will look up the yields in a table. With the conditions and yields in hand, we can build a Bayesian model and use this model to select another 5 reaction conditions. We will then look up the yields for the 5 conditions and use this information to update the model. We will repeat this process through 5 rounds of optimization and examine the reaction yields for each optimization cycle.
     """)
     return
@@ -88,10 +95,10 @@ def _(mo):
 
     Setting up an experimentation campaign with `BayBE` requires us to set up the main components individually. In this notebook, we will set up the following components one after another.
 
-    1. [**Parameters**](https://emdgroup.github.io/baybe/0.14.2/userguide/parameters.html): We start by defining the reaction parameters to be optimized. Each of the 5 parameters described earlier will correspond to exactly one of BayBE's `Parameter`s.
-    2. [**Search space**](https://emdgroup.github.io/baybe/0.14.2/userguide/searchspace.html): The search space defines the combination of parameters to be searched. The search space is typically defined using the function `Searchspace.from_product`, which creates a search space as the Cartesian product of the parameters.
-    3. [**Target**](https://emdgroup.github.io/baybe/0.14.2/userguide/targets.html): The target is the quantity we are optimizing. In the case of reaction optimization, this is typically the yield. `BayBE` can optimize a single parameter or multiple parameters at once. In this notebook, we'll focus on single parameter optimization, where we are only optimizing the yield, and hence stick to single target optimization.
-    4. [**Recommender**](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html): The recommender selects the next set of experiments to be performed. In this case, we use the [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender behaves differently depending on whether it has experimental data. At the beginning of an optimization process, we typically don't have experimental data and want to find a diverse set of conditions to gather some initial data. If the `TwoPhaseMetaRecommender` has no data available, it uses Farthest Point Sampling to select a diverse set of initial conditions. If the recommender has data, it uses the [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html), a Bayesian optimizer that balances exploration and exploitation when selecting sets of reaction conditions.
+    1. [**Parameters**](https://emdgroup.github.io/baybe/0.14.2/userguide/parameters.html): In our setting, a _parameter_ is something that we can control directly. An example of this is which ligand to choose, or at which of the available temperatures to run the experiment. Each of the 5 parameters described earlier will correspond to exactly one of BayBE's `Parameter`s.
+    2. [**Search space**](https://emdgroup.github.io/baybe/0.14.2/userguide/searchspace.html): The search space defines the combination of parameters to be searched. It thus contains all possible experiments that we could conduct. The search space is typically defined using the function `Searchspace.from_product`, which creates a search space as the Cartesian product of the parameters.
+    3. [**Target**](https://emdgroup.github.io/baybe/0.14.2/userguide/targets.html): The target is the quantity we are optimizing. In the case of reaction optimization, this is typically the yield. `BayBE` can optimize a single parameter or multiple parameters at once. In this notebook, we'll focus on single parameter optimization, where we are only optimizing the yield, and we hence stick to single target optimization.
+    4. [**Recommender**](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html): The recommender selects the next set of experiments to be performed. In this case, we use the default [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender behaves differently depending on whether it has experimental data. At the beginning of an optimization process, we typically don't have experimental data and want to find a diverse set of conditions to gather some initial data. If the `TwoPhaseMetaRecommender` has no data available, it uses random sampling to select a set of initial experiments. If the recommender has data, it uses the [`BotorchRecommender`].(https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html), a Bayesian optimizer that balances exploration and exploitation when selecting sets of reaction conditions.
     5. [**Campaign**](https://emdgroup.github.io/baybe/0.14.2/userguide/campaigns.html): In `BayBE`, the search space, objective, and recommender are combined into an `campaign` object. The Campaign has two important methods: `recommend`, which recommends the next set of experiments, and `add_measurements', which adds a set of experiments and updates the underlying Bayesian model.
     """)
     return
@@ -108,6 +115,10 @@ def _(mo):
     The `CategoricalParameter` has a `name` field as well as a `values` field. The `name` is used to describe the parameter, while the `values` are the collection of values that the parameter can take. In addition, one can choose a specific `encoding`. For the sake of this tutorial, we use the `One-Hot-Encoding`, `BayBE`'s default choice for `CategoricalParameter`s.
 
     In this tutorial, we model the three different chemical parameters, that is, the solvent, the ligand, and the base as `CategoricalParameters`. Since we have access to the data, we extract the values for the parameters from there, and create the corresponding `CategoricalParameters`.
+
+    /// admonition | Note
+    As ligand, solvent and base are chmical substances, they should preferably be modeled using the [`SubstanceParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.substance.SubstanceParameter.html). This is not done in this example for simplicity. We refer to the `Chemical_Encodings` example for a tutorial on using `SubstanceParameter`s  and a demonstration of its effect.
+    ///
     """)
     return
 
@@ -169,7 +180,7 @@ def _(mo):
     mo.md(r"""
     ## Define the [`Target`](https://emdgroup.github.io/baybe/0.14.2/userguide/targets.html) & objective
 
-    In this example, we want to maximize the yield of the reaction. Since we are only optimizing a single objective, we use the [`SingleTargetObjective`](https://emdgroup.github.io/baybe/0.14.2/userguide/objectives.html#singletargetobjective) and set the `mode` to `"MAX"`.
+    In this example, we want to maximize the yield of the reaction. Since we are only optimizing a single objective, we use the [`SingleTargetObjective`](https://emdgroup.github.io/baybe/0.14.2/userguide/objectives.html#singletargetobjective) which assumes a maximization of the target as default.
     """)
     return
 
@@ -190,23 +201,13 @@ def _(mo):
     ## Define the [`Recommender`](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html)
 
     The [`Recommender`](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html) selects the next set of experiments to try.
-    There are many different recommenders offered by `BayBE`, and a lot of ways of combining them. For the sake of this example, we do not use the default initial recommender, but use the  [`FPSRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.nonpredictive.sampling.FPSRecommender.html#baybe.recommenders.pure.nonpredictive.sampling.FPSRecommender). This choice ensures that if there is no data available, the recommender uses farthest point sampling to select a diverse set of conditions. If data is available, the [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html#baybe.recommenders.pure.bayesian.botorch.BotorchRecommender) is used to balance exploration and exploitation and select the next set of reaction conditions.
+    There are many different recommenders offered by `BayBE`, and a lot of ways of combining them. For this example, we use the default initial recommender, the [`RandomRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.nonpredictive.sampling.RandomRecommender.html). This recommender samples initial points from the search space randomly. Once it has data available, BayBE will automatically switch to the [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html).
+
+    /// admonition | Task
+    Instead of using the default recommender, use the [`FPSRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.nonpredictive.sampling.FPSRecommender.html). Also, think about which of the two recommenders should be used in this example, and under which circumstances which recommender might be more favourable.
+    ///
     """)
     return
-
-
-@app.cell
-def _():
-    from baybe.recommenders import (
-        TwoPhaseMetaRecommender,
-        FPSRecommender,
-        BotorchRecommender,
-    )
-
-    recommender = TwoPhaseMetaRecommender(
-        initial_recommender=FPSRecommender(), recommender=BotorchRecommender()
-    )
-    return (recommender,)
 
 
 @app.cell(hide_code=True)
@@ -220,11 +221,11 @@ def _(mo):
 
 
 @app.cell
-def _(objective, recommender, searchspace):
+def _(objective, searchspace):
     from baybe.campaign import Campaign
 
     campaign = Campaign(
-        searchspace=searchspace, objective=objective, recommender=recommender
+        searchspace=searchspace, objective=objective
     )
     return (campaign,)
 
@@ -232,9 +233,9 @@ def _(objective, recommender, searchspace):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Starting [`the recommendation loop`](https://emdgroup.github.io/baybe/0.14.2/userguide/getting_recommendations.html)
+    ## Starting [the recommendation loop](https://emdgroup.github.io/baybe/0.14.2/userguide/getting_recommendations.html)
 
-    Now that the `campaign` is defined, we can ask it for recommendations. So far, we haven't done any experiments. As such, the `campaign` will use the farthest point sampling to select a diverse set of initial experiments.
+    Now that the `campaign` is defined, we can ask it for recommendations. So far, we haven't done any experiments. As such, the `campaign` will use random sampling to select a diverse set of initial experiments.
     """)
     return
 
@@ -254,7 +255,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df, initial_rec, pd):
     merge_columns = [
         "Ligand_Name",

@@ -2,7 +2,7 @@
 
 This repository contains some tutorials and general resources for the usage of [BayBE](https://github.com/emdgroup/baybe), the Bayesian Optimization Framework developed by Merck KGaA, Darmstadt, Germany.
 
-NOTE: This repository is still work-in-progress, and the resources and tutorials here can and will change significantly over time.
+**NOTE**: This repository is updated regularly, and the resources and tutorials here can and will change significantly over time. It might not always reflect the newest versions of BayBE. To verify which version of BayBE is being used, refer to the individual files.
 
 ## How to use
 
@@ -16,9 +16,10 @@ browser and enables you to run and execute the notebook.
 
 1. Create a python environment using a version of python compatible with BayBE, e.g. via
 ```
-mamba create --yes --name baybe-resources python=3.10
+mamba create --yes --name baybe-resources python=3.13
 mamba activate baybe-resources
 ```
+if you use `mamba`.
 2. Install the additional dependencies from `requirements.txt` via `pip install -r requirements.txt`.
 3. Depending on which example you want to investigate, you might need to install the additional dependencies in the corresponding folders.
 

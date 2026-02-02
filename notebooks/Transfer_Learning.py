@@ -407,7 +407,7 @@ def _(mo):
     * `N_DOE_ITERATIONS = 30`
     * `BATCH_SIZE = 2`
     * `N_MC_ITERATIONS = 40`
-    * `TEMP_TO_INVESTIGAETE = 105`
+    * `TEMP_TO_INVESTIGATE = 105`
 
     It demonstrates that already a little data can help in the beginning of an experimental campaign, and that although more data is more favourable, the effects are diminishing at some point.
     """)

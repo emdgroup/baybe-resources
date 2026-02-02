@@ -20,7 +20,7 @@ def _(mo):
 
     This notebook demonstrates the power and usefulness of BayBE's chemical encodings. If parameters in a process to be optimized are chemicals, this feature enables BayBE to automatically use meaningful chemical descriptors, automatically leveraging chemical knowledge for the optimization process.
 
-    This notebook assumes some basic familiarity with using BayBE, and that it does not explain all of the core concepts. If you are interested in those, we recommend to first check out the `Reation_Optimization` example.
+    This notebook assumes some basic familiarity with using BayBE, and that it does not explain all of the core concepts. If you are interested in those, we recommend to first check out the `Reaction_Optimization` example.
     """)
     return
 

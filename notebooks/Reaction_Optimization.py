@@ -117,7 +117,7 @@ def _(mo):
     In this tutorial, we model the three different chemical parameters, that is, the solvent, the ligand, and the base as `CategoricalParameters`. Since we have access to the data, we extract the values for the parameters from there, and create the corresponding `CategoricalParameters`.
 
     /// admonition | Note
-    As ligand, solvent and base are chmical substances, they should preferably be modeled using the [`SubstanceParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.substance.SubstanceParameter.html). This is not done in this example for simplicity. We refer to the `Chemical_Encodings` example for a tutorial on using `SubstanceParameter`s  and a demonstration of its effect.
+    As ligand, solvent and base are chemical substances, they should preferably be modeled using the [`SubstanceParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.substance.SubstanceParameter.html). This is not done in this example for simplicity. We refer to the `Chemical_Encodings` example for a tutorial on using `SubstanceParameter`s  and a demonstration of its effect.
     ///
     """)
     return

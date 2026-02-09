@@ -16,20 +16,16 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # Using BayBE to optimize Reaction Conditions
+    # Using `BayBE` to optimize Reaction Conditions
 
-    This notebook contains an example on how to use BayBE for the optimization of reaction conditions. It is inspired by the corresponding notebook developed by Pat Walters as part of his [Practical Cheminformatics Tutorial](https://github.com/PatWalters/practical_cheminformatics_tutorials). This notebook assumes basic familiarity with the core concepts of Bayesian Optimization. The intention of this notebook is *not* to introduce and explain all aspects of Bayesian Optimization, but to focus on the usage of BayBE.
+    This notebook contains an example on how to use BayBE for the optimization of reaction conditions. It is inspired by the corresponding notebook developed by Pat Walters as part of his [Practical Cheminformatics Tutorial](https://github.com/PatWalters/practical_cheminformatics_tutorials). This notebook assumes basic familiarity with the core concepts of Bayesian Optimization. The intention of this notebook is *not* to introduce and explain all aspects of Bayesian Optimization, but to focus on the usage of `BayBE`.
 
-    In drug discovery, we frequently encounter situations where we need to modify a set of reaction conditions to optimize the yield. This notebook shows how to use BayBE to model and optimize such a campaign.
+    In drug discovery, we frequently encounter situations where we need to modify a set of reaction conditions to optimize the yield. This notebook shows how to use `BayBE` to model and optimize such a campaign.
+    In particular, it demonstrates the power and usefulness of `BayBE`'s chemical encodings. If parameters in a process to be optimized are chemicals, this feature enables `BayBE` to automatically use meaningful chemical descriptors, automatically leveraging chamical knowledge for the optimization process.
 
-    # Chemical encodings
-
-    This notebook demonstrates the power and usefulness of BayBE's chemical encodings. If parameters in a process to be optimized are chemicals, this feature enables BayBE to automatically use meaningful chemical descriptors, automatically leveraging chamical knowledge for the optimization process.
-
-    This notebook assumes some basic familiarity with using BayBE, and that it does not explain all of the core concepts. If you are interested in those, we recommend to first check out the `Reation_Optimization` example.
 
     /// caution
-    This notebook was developed for BayBE version 0.14.2. Although we do our best in keeping our breaking changes minimal and support outdated versions for a long time, this notebook might not be immediately applicable for other BayBE versions. If you install BayBE via the instructions in this repository, version 0.14.2 will thus be installed.
+    This notebook was developed for `BayBE` version 0.14.2. Although we do our best in keeping our breaking changes minimal and support outdated versions for a long time, this notebook might not be immediately applicable for other `BayBE` versions. If you install `BayBE` via the instructions in this repository, version 0.14.2 will thus be installed.
     ///
     """)
     return
@@ -72,10 +68,17 @@ def _(mo):
 @app.cell(hide_code=True)
 def _():
     import pandas as pd
+    from utils import create_dict_from_columns
 
     df = pd.read_csv("data/shields.csv")
+
+    # Extract SMILES data for all chemical substances
+    solvents_dict = create_dict_from_columns(df, "Solvent_Name", "Solvent_SMILES")
+    ligands_dict = create_dict_from_columns(df, "Ligand_Name", "Ligand_SMILES")
+    bases_dict = create_dict_from_columns(df, "Base_Name", "Base_SMILES")
+
     df
-    return df, pd
+    return bases_dict, df, ligands_dict, pd, solvents_dict
 
 
 @app.cell(hide_code=True)
@@ -95,11 +98,11 @@ def _(mo):
 
     Setting up an experimentation campaign with `BayBE` requires us to set up the main components individually. In this notebook, we will set up the following components one after another.
 
-    1. [**Parameters**](https://emdgroup.github.io/baybe/0.14.2/userguide/parameters.html): In our setting, a _parameter_ is something that we can control directly. An example of this is which ligand to choose, or at which of the available temperatures to run the experiment. Each of the 5 parameters described earlier will correspond to exactly one of BayBE's `Parameter`s.
+    1. [**Parameters**](https://emdgroup.github.io/baybe/0.14.2/userguide/parameters.html): In our setting, a _parameter_ is something that we can control directly. An example of this is which ligand to choose, or at which of the available temperatures to run the experiment. Each of the 5 parameters described earlier will correspond to exactly one of `BayBE`'s `Parameter`s.
     2. [**Search space**](https://emdgroup.github.io/baybe/0.14.2/userguide/searchspace.html): The search space defines the combination of parameters to be searched. It thus contains all possible experiments that we could conduct. The search space is typically defined using the function `Searchspace.from_product`, which creates a search space as the Cartesian product of the parameters.
     3. [**Target**](https://emdgroup.github.io/baybe/0.14.2/userguide/targets.html): The target is the quantity we are optimizing. In the case of reaction optimization, this is typically the yield. `BayBE` can optimize a single parameter or multiple parameters at once. In this notebook, we'll focus on single parameter optimization, where we are only optimizing the yield, and we hence stick to single target optimization.
-    4. [**Recommender**](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html): The recommender selects the next set of experiments to be performed. In this case, we use the default [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender behaves differently depending on whether it has experimental data. At the beginning of an optimization process, we typically don't have experimental data and want to find a diverse set of conditions to gather some initial data. If the `TwoPhaseMetaRecommender` has no data available, it uses random sampling to select a set of initial experiments. If the recommender has data, it uses the [`BotorchRecommender`].(https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html), a Bayesian optimizer that balances exploration and exploitation when selecting sets of reaction conditions.
-    5. [**Campaign**](https://emdgroup.github.io/baybe/0.14.2/userguide/campaigns.html): In `BayBE`, the search space, objective, and recommender are combined into an `campaign` object. The Campaign has two important methods: `recommend`, which recommends the next set of experiments, and `add_measurements', which adds a set of experiments and updates the underlying Bayesian model.
+    4. [**Recommender**](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html): The recommender selects the next set of experiments to be performed. In this case, we use the default [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender behaves differently depending on whether it has experimental data. At the beginning of an optimization process, we typically don't have experimental data and want to find a diverse set of conditions to gather some initial data. If the `TwoPhaseMetaRecommender` has no data available, it uses random sampling to select a set of initial experiments. If the recommender has data, it uses the [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html), a Bayesian optimizer that balances exploration and exploitation when selecting sets of reaction conditions.
+    5. [**Campaign**](https://emdgroup.github.io/baybe/0.14.2/userguide/campaigns.html): In `BayBE`, the search space, objective, and recommender are combined into an `campaign` object. The Campaign has two important methods: `recommend`, which recommends the next set of experiments, and `add_measurements`, which adds a set of experiments and updates the underlying Bayesian model.
     """)
     return
 
@@ -109,30 +112,35 @@ def _(mo):
     mo.md("""
     ## Defining the [`Parameters`](https://emdgroup.github.io/baybe/0.14.2/userguide/parameters.html)
 
-    In this section, we introduce two different parameter types: The [`CategoricalParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.categorical.CategoricalParameter.html) and the [`NumericalDiscreteParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.numerical.NumericalDiscreteParameter.html).
+    In this section, we introduce two different parameter types: The [`SubstanceParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.substance.SubstanceParameter.html) and the [`NumericalDiscreteParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.numerical.NumericalDiscreteParameter.html).
 
+    The `SubstanceParameter` is specifically designed for chemical substances and can automatically use meaningful chemical descriptors. It takes a `name` field and a `data` dictionary mapping substance names to their SMILES representations. One can also choose a specific chemical `encoding` such as MORDRED, ECFP, or RDKIT2DDESCRIPTORS.
 
-    The `CategoricalParameter` has a `name` field as well as a `values` field. The `name` is used to describe the parameter, while the `values` are the collection of values that the parameter can take. In addition, one can choose a specific `encoding`. For the sake of this tutorial, we use the `One-Hot-Encoding`, `BayBE`'s default choice for `CategoricalParameter`s.
-
-    In this tutorial, we model the three different chemical parameters, that is, the solvent, the ligand, and the base as `CategoricalParameters`. Since we have access to the data, we extract the values for the parameters from there, and create the corresponding `CategoricalParameters`.
-
-    /// admonition | Note
-    As ligand, solvent and base are chemical substances, they should preferably be modeled using the [`SubstanceParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.substance.SubstanceParameter.html). This is not done in this example for simplicity. We refer to the `Chemical_Encodings` example for a tutorial on using `SubstanceParameter`s and a demonstration of its effect.
-    ///
+    In this tutorial, we model all three chemical parameters (ligand, solvent, and base) as `SubstanceParameter`s to leverage chemical knowledge in the optimization process. Since we have access to the SMILES data, we extract the mappings from the data and create the corresponding `SubstanceParameter`s.
     """)
     return
 
 
 @app.cell
-def _(df):
-    from baybe.parameters import CategoricalParameter
+def _(bases_dict, ligands_dict, solvents_dict):
+    from baybe.parameters import SubstanceParameter
 
-    ligand = CategoricalParameter(values=df["Ligand_Name"].unique(), name="Ligand_Name")
-    solvent = CategoricalParameter(
-        values=df["Solvent_Name"].unique(), name="Solvent_Name"
+    ligand = SubstanceParameter(
+        name="Ligand_Name",
+        data=ligands_dict,
+        encoding="MORDRED"
     )
-    base = CategoricalParameter(values=df["Base_Name"].unique(), name="Base_Name")
-    return base, ligand, solvent
+    solvent = SubstanceParameter(
+        name="Solvent_Name",
+        data=solvents_dict,
+        encoding="MORDRED"
+    )
+    base = SubstanceParameter(
+        name="Base_Name",
+        data=bases_dict,
+        encoding="MORDRED"
+    )
+    return SubstanceParameter, base, ligand, solvent
 
 
 @app.cell(hide_code=True)
@@ -153,7 +161,7 @@ def _(df):
     temperature = NumericalDiscreteParameter(
         values=df["Temp_C"].unique(), name="Temp_C"
     )
-    return concentration, temperature
+    return NumericalDiscreteParameter, concentration, temperature
 
 
 @app.cell(hide_code=True)
@@ -172,7 +180,7 @@ def _(base, concentration, ligand, solvent, temperature):
 
     parameters = [ligand, solvent, base, concentration, temperature]
     searchspace = SearchSpace.from_product(parameters=parameters)
-    return (searchspace,)
+    return SearchSpace, searchspace
 
 
 @app.cell(hide_code=True)
@@ -201,13 +209,25 @@ def _(mo):
     ## Define the [`Recommender`](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html)
 
     The [`Recommender`](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html) selects the next set of experiments to try.
-    There are many different recommenders offered by `BayBE`, and a lot of ways of combining them. For this example, we use the default initial recommender, the [`RandomRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.nonpredictive.sampling.RandomRecommender.html). This recommender samples initial points from the search space randomly. Once it has data available, BayBE will automatically switch to the [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html).
-
-    /// admonition | Task
-    Instead of using the default recommender, use the [`FPSRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.nonpredictive.sampling.FPSRecommender.html). Also, think about which of the two recommenders should be used in this example, and under which circumstances which recommender might be more favourable.
-    ///
+    There are many different recommenders offered by `BayBE`, and a lot of ways of combining them. For this example, we use a [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html) equipped with a [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html) that uses the [`EDBOKernel`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.surrogates.gaussian_process.presets.edbo.EDBOKernelFactory.html). The EDBO kernel is particularly well-suited for chemical optimization problems as it was specifically designed to handle chemical descriptors effectively.
     """)
     return
+
+
+@app.cell
+def _():
+    from baybe.surrogates.gaussian_process.presets.edbo import EDBOKernelFactory
+    from baybe.recommenders import TwoPhaseMetaRecommender, BotorchRecommender
+    from baybe.surrogates import GaussianProcessSurrogate
+
+    recommender = TwoPhaseMetaRecommender(
+        recommender=BotorchRecommender(
+            surrogate_model=GaussianProcessSurrogate(
+                kernel_or_factory=EDBOKernelFactory()
+            )
+        )
+    )
+    return (recommender,)
 
 
 @app.cell(hide_code=True)
@@ -221,13 +241,13 @@ def _(mo):
 
 
 @app.cell
-def _(objective, searchspace):
+def _(objective, recommender, searchspace):
     from baybe.campaign import Campaign
 
     campaign = Campaign(
-        searchspace=searchspace, objective=objective
+        searchspace=searchspace, objective=objective, recommender=recommender
     )
-    return (campaign,)
+    return Campaign, campaign
 
 
 @app.cell(hide_code=True)
@@ -331,8 +351,197 @@ def _(campaign):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    As we can see, we found a very good candidate, and only needed to evaluate a fraction of the search space! This insight concludes this basic BayBE tutorial.
+    As we can see, we found a very good candidate, and only needed to evaluate a fraction of the search space!
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Investigating Different Chemical Encodings
+
+    Now that we've seen how to use `BayBE` for reaction optimization with chemical encodings, let's investigate how different chemical encodings affect the optimization performance. BayBE supports multiple chemical encodings for `SubstanceParameter`s, each capturing different aspects of molecular structure.
+
+    We'll compare three different chemical encodings as well as the One-Hot-Encoding by running simulated optimization campaigns and visualizing their performance.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    We create multiple campaigns, one for each encoding we want to compare. Each campaign will use `SubstanceParameter`s for all three chemical parameters (solvent, ligand, and base) with the specified encoding:
+    """)
+    return
+
+
+@app.cell
+def _(
+    Campaign,
+    NumericalDiscreteParameter,
+    SearchSpace,
+    SubstanceParameter,
+    bases_dict,
+    df,
+    ligands_dict,
+    objective,
+    recommender,
+    solvents_dict,
+):
+    substance_encodings = ["MORDRED", "ECFP", "RDKIT2DDESCRIPTORS"]
+    scenarios = {
+        encoding: Campaign(
+            searchspace=SearchSpace.from_product(
+                parameters=[
+                    SubstanceParameter(
+                        name="Solvent_Name",
+                        data=solvents_dict,
+                        encoding=encoding,
+                    ),
+                    SubstanceParameter(
+                        name="Base_Name",
+                        data=bases_dict,
+                        encoding=encoding,
+                    ),
+                    SubstanceParameter(
+                        name="Ligand_Name",
+                        data=ligands_dict,
+                        encoding=encoding,
+                    ),
+                    NumericalDiscreteParameter(
+                        values=df["Concentration"].unique(), name="Concentration"
+                    ),
+                    NumericalDiscreteParameter(
+                        values=df["Temp_C"].unique(), name="Temp_C"
+                    ),
+                ]
+            ),
+            objective=objective,
+            recommender=recommender,
+        )
+        for encoding in substance_encodings
+    }
+    return (scenarios,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    We also want to compare the campaigns using chemical encodings to a baseline campaign that uses One-Hot Encoding (OHE) with `CategoricalParameter`s for all chemical parameters:
+    """)
+    return
+
+
+@app.cell
+def _(
+    Campaign,
+    NumericalDiscreteParameter,
+    SearchSpace,
+    df,
+    objective,
+    recommender,
+    scenarios,
+):
+    from baybe.parameters import CategoricalParameter
+
+    ohe_parameters = [
+        CategoricalParameter(
+            name="Solvent_Name", values=df["Solvent_Name"].unique(), encoding="OHE"
+        ),
+        CategoricalParameter(
+            name="Base_Name", values=df["Base_Name"].unique(), encoding="OHE"
+        ),
+        CategoricalParameter(
+            name="Ligand_Name", values=df["Ligand_Name"].unique(), encoding="OHE"
+        ),
+        NumericalDiscreteParameter(name="Temp_C", values=[90, 105, 120]),
+        NumericalDiscreteParameter(name="Concentration", values=[0.057, 0.1, 0.153]),
+    ]
+    campaign_ohe = Campaign(
+        searchspace=SearchSpace.from_product(parameters=ohe_parameters),
+        objective=objective,
+        recommender=recommender,
+    )
+    scenarios["OHE"] = campaign_ohe
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Using BayBE's [simulation capabilities](https://emdgroup.github.io/baybe/0.14.2/userguide/simulation.html)
+
+    BayBE offers powerful simulation capabilities that allow us to compare different optimization strategies without running actual experiments. The simulation uses a lookup mechanism to retrieve target values from our dataset, effectively simulating multiple optimization campaigns with different random seeds (Monte Carlo iterations).
+
+    Let's run the simulation with multiple Monte Carlo iterations to get statistically meaningful results:
+    """)
+    return
+
+
+@app.cell
+def _(df, scenarios):
+    from baybe.simulation import simulate_scenarios
+
+    BATCH_SIZE = 2
+    N_DOE_ITERATIONS = 5  # Change to ~20 for better plots
+    N_MC_ITERATIONS = 10  # Change to ~30 for better plots
+
+    results = simulate_scenarios(
+        scenarios,
+        df,
+        batch_size=BATCH_SIZE,
+        n_doe_iterations=N_DOE_ITERATIONS,
+        n_mc_iterations=N_MC_ITERATIONS,
+    )
+
+    results.rename(
+        columns={
+            "Scenario": "Substance encoding",
+            "Num_Experiments": "Number of experiments",
+            "yield_CumBest": "Running best yield",
+        },
+        inplace=True,
+    )
+    return (results,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Visualizing the Results
+
+    Now let's visualize the results using the `backtest_plot` utility. This plot shows:
+    - The mean performance across Monte Carlo iterations (solid line)
+    - Confidence intervals (shaded regions)
+    - A horizontal guideline at 90% yield (our target threshold)
+    - Vertical guidelines showing when the `MORDRED` and `OHE` encoding reach the target.
+
+    The plot shows that using the `SubstanceParameter` and hence equipping `BayBE` with chemical knowledge significantly improves the performance.
+    """)
+    return
+
+
+@app.cell
+def _(mo, results):
+    from utils import backtest_plot
+    import matplotlib.pyplot as plt
+
+    backtest_plot(
+        df=results,
+        x="Number of experiments",
+        y="Running best yield",
+        hue="Substance encoding",
+        indicator_y=90,
+        indicator_labels=["MORDRED", "OHE"],
+    )
+    mo.mpl.interactive(plt.gcf())
+    return (plt,)
+
+
+@app.cell
+def _(plt):
+    plt.close()
     return
 
 

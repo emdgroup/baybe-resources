@@ -455,8 +455,12 @@ def _(
         CategoricalParameter(
             name="Ligand_Name", values=df["Ligand_Name"].unique(), encoding="OHE"
         ),
-        NumericalDiscreteParameter(name="Temp_C", values=[90, 105, 120]),
-        NumericalDiscreteParameter(name="Concentration", values=[0.057, 0.1, 0.153]),
+        NumericalDiscreteParameter(
+            name="Temp_C", values=df["Temp_C"].unique()
+        ),
+        NumericalDiscreteParameter(
+            name="Concentration", values=df["Concentration"].unique()
+        ),
     ]
     campaign_ohe = Campaign(
         searchspace=SearchSpace.from_product(parameters=ohe_parameters),

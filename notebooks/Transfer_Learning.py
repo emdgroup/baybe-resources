@@ -36,7 +36,7 @@ def _(mo):
     mo.md(r"""
     ## Some basic settings and data loading
 
-    We begin by introducing some settings that will be used later in this notebook. We also load the data, which is the same data used in the `Chemical_Encoding` notebook.
+    We begin by introducing some settings that will be used later in this notebook. We also load the data, which is the a slightly adjusted version of the Shields-Dataset used in other notebooks, where the `Temperature` has been replaced by `Lab`.
     """)
     return
 
@@ -45,7 +45,7 @@ def _(mo):
 def _():
     import pandas as pd
 
-    data = pd.read_csv("data/shields.csv")
+    data = pd.read_csv("data/shields_tl.csv")
     data
     return data, pd
 
@@ -186,7 +186,7 @@ def _(mo):
 
 @app.cell
 def _(Path, analyze_data):
-    analyze_data(Path("data/shields.csv"), "lab")
+    analyze_data(Path("data/shields_tl.csv"), "lab")
     return
 
 
@@ -223,7 +223,7 @@ def _(concentrations, pd):
     from utils import create_dict_from_columns
 
     encoding = "RDKIT2DDESCRIPTORS"
-    df = pd.read_csv("data/shields.csv")
+    df = pd.read_csv("data/shields_tl.csv")
 
     substances = {
         "bases": create_dict_from_columns(df, "Base_Name", "Base_SMILES"),

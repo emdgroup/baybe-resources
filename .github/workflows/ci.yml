@@ -24,18 +24,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Run notebook scripts
+    - name: Run marimo notebook scripts
       run: |
+        # Only execute marimo notebooks (*.py files), not Jupyter notebooks (*.ipynb)
         for script in notebooks/*.py; do
           if [ -f "$script" ]; then
-            # Skip utils.py
+            # Skip utils.py (helper module, not a notebook)
             filename=$(basename "$script")
             if [ "$filename" = "utils.py" ]; then
-              echo "Skipping utils.py"
+              echo "Skipping utils.py (helper module)"
               continue
             fi
             
-            echo "Running $script"
+            echo "Running marimo notebook: $script"
             python "$script"
           fi
         done

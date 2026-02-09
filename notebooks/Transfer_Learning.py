@@ -36,7 +36,7 @@ def _(mo):
     mo.md(r"""
     ## Some basic settings and data loading
 
-    We begin by introducing some settings that will be used later in this notebook. We also load the data, which is the same data used in the `Reaction_Optimization` and `Chemical_Encoding` notebooks.
+    We begin by introducing some settings that will be used later in this notebook. We also load the data, which is the same data used in the `Chemical_Encoding` notebook.
     """)
     return
 
@@ -57,7 +57,7 @@ def _(mo):
 
     The first step of a potential transfer learning workflow should always be a detailed analysis of the data. The reason is that transfer learning assume that there is some positive correlation in the data which can then be leveraged. If there is no such positive correlation, then transfer learning is not the correct tool to use, and attempting to use can even be harmful.
 
-    In this example, we want to evaluate if we can use transfer learning for leveraging knowledge that we gained for reactions on two temperatures for the third temperature. We thus begin by visualizing the data, using a small helper function that is defined in the next cell.
+    In this example, we want to evaluate if we can use transfer learning for leveraging knowledge that we gained for reactions in two labs for the third lab. We thus begin by visualizing the data, using a small helper function that is defined in the next cell.
     """)
     return
 
@@ -71,10 +71,10 @@ def _():
     from itertools import combinations
     import scipy.stats as stats
 
-    temperatures = [90, 105, 120]
+    labs = ["A", "B", "C"]
     concentrations = [0.057, 0.1, 0.153]
-    units = {"temperature": "°C", "concentration": "mol / l"}
-    parameters_to_analyze = {"temperature": temperatures, "concentration": concentrations}
+    units = {"lab": "", "concentration": "mol / l"}
+    parameters_to_analyze = {"lab": labs, "concentration": concentrations}
 
     def analyze_data(file_path: Path, parameter_to_analyze: str):
         data = defaultdict(lambda: defaultdict(list))
@@ -86,7 +86,7 @@ def _():
                 config["ligand"] = row["Ligand_Name"]
                 config["solvent"] = row["Solvent_Name"]
                 config["concentration"] = float(row["Concentration"])
-                config["temperature"] = int(row["Temp_C"])
+                config["lab"] = row["Lab"]
                 yield_value = float(row["yield"])
 
                 # config key consists of every key in the config dictionary, except for
@@ -115,21 +115,23 @@ def _():
                     yields_v1.append(yield_v1)
                     yield_v2 = parameter_combination[v2][0]
                     yields_v2.append(yield_v2)
-                    slope = (yield_v2 - yield_v1) / (v2 - v1)
-                    slopes.append(slope)
+                    if parameter_to_analyze != "lab":
+                        slope = (yield_v2 - yield_v1) / (v2 - v1)
+                        slopes.append(slope)
 
             ## Correlation between yields at v1 and v2
             corr, _ = stats.pearsonr(yields_v1, yields_v2)
+            unit_str = f" {units[parameter_to_analyze]}" if units[parameter_to_analyze] else ""
             print(
                 f"Pearson correlation coefficient (PCC) between yields at "
-                f"{v1} {units[parameter_to_analyze]} and "
-                f"{v2} {units[parameter_to_analyze]}: {corr:.2f}"
+                f"{v1}{unit_str} and "
+                f"{v2}{unit_str}: {corr:.2f}"
             )
             scc, _ = stats.spearmanr(yields_v1, yields_v2)
             print(
                 f"Spearman rank correlation coefficient (SCC) between yields at "
-                f"{v1} {units[parameter_to_analyze]} and "
-                f"{v2} {units[parameter_to_analyze]}: {scc:.2f}"
+                f"{v1}{unit_str} and "
+                f"{v2}{unit_str}: {scc:.2f}"
             )
             slope, intercept, r_value, p_value, std_err = stats.linregress(
                 yields_v1, yields_v2
@@ -156,12 +158,12 @@ def _():
                 color="grey",
                 label=f"R$^2$ = {r_value**2:.2f}, PCC = {corr:.2f}, SCC = {scc:.2f}",
             )
-            ax.set_xlabel(f"yield at {v1} {units[parameter_to_analyze]}")
-            ax.set_ylabel(f"yield at {v2} {units[parameter_to_analyze]}")
+            ax.set_xlabel(f"yield at {v1}{unit_str}")
+            ax.set_ylabel(f"yield at {v2}{unit_str}")
             ax.set_title(
                 f"{parameter_to_analyze} combination: "
-                f"{v1} {units[parameter_to_analyze]} to "
-                f"{v2} {units[parameter_to_analyze]}"
+                f"{v1}{unit_str} to "
+                f"{v2}{unit_str}"
             )
             # include 1:1 line
             ax.plot(x, x, color="black", linestyle="--", label="1:1 line")
@@ -169,14 +171,14 @@ def _():
             # show the legend
             ax.legend()
             plt.show()
-    return Path, analyze_data, concentrations, plt, temperatures
+    return Path, analyze_data, concentrations, labs, plt
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     /// admonition | Task
-    The helper function is written in a generic way, allowing to also investigate other potential parameters. Instead of investigating whether the temperature is a suitable candidate for transfer learning, investigate whether or not the concentration could also be used.
+    The helper function is written in a generic way, allowing to also investigate other potential parameters. Instead of investigating whether the lab is a suitable candidate for transfer learning, investigate whether or not the concentration could also be used. Also think about why makes the concentration parameter inherently different from the lab parameter, and what the influence of this on the question of whether or not to use it as a `TaskParameter` is.
     ///
     """)
     return
@@ -184,7 +186,7 @@ def _(mo):
 
 @app.cell
 def _(Path, analyze_data):
-    analyze_data(Path("data/shields.csv"), "temperature")
+    analyze_data(Path("data/shields.csv"), "lab")
     return
 
 
@@ -257,34 +259,34 @@ def _(mo):
     mo.md("""
     Transfer Learning in `BayBE` is enabled by using a special parameter - the [`TaskParameter`](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html#the-role-of-the-taskparameter). This parameter is used to "mark" the context of individual experiments, and thus to "align" different campaigns along their context dimension. The set of all possible contexts is provided upon the initialization of the `TaskParameter` by providing them as `values`.
 
-    In this example, each temperature corresponds to a different `context`. The set of `values` is thus the set of all temperatures. The `active_values` describes for which tasks recommendations should be given. This ensures that `BayBE` does not recommend to conduct experiments for a context that might no longer be available.
+    In this example, each lab corresponds to a different `context`. The set of `values` is thus the set of all labs. The `active_values` describes for which tasks recommendations should be given. This ensures that `BayBE` does not recommend to conduct experiments for a context that might no longer be available.
 
-    We can then combine the `TaskParameters` together with the components defined above to create one campaign for each temperature.
+    We can then combine the `TaskParameters` together with the components defined above to create one campaign for each lab.
     """)
     return
 
 
 @app.cell
-def _(objective, parameters, temperatures):
+def _(labs, objective, parameters):
     from baybe.parameters import TaskParameter
     from baybe import Campaign
     from baybe.searchspace import SearchSpace
 
     tl_campaigns = {
-        temp: Campaign(
+        lab: Campaign(
             searchspace=SearchSpace.from_product(
                 parameters=parameters
                 + [
                     TaskParameter(
-                        name="Temp_C",
-                        values=[str(t) for t in temperatures],
-                        active_values=[str(temp)],
+                        name="Lab",
+                        values=labs,
+                        active_values=[lab],
                     )
                 ]
             ),
             objective=objective,
         )
-        for temp in temperatures
+        for lab in labs
     }
     return Campaign, tl_campaigns
 
@@ -296,7 +298,7 @@ def _(mo):
 
     We now set up the simulation loop. This requires us to define the number of DoE iterations as well as the number of Monte Carlo iterations.
 
-    Since we want to investigate the influence of Transfer Learning, we will provide the campaigns with batches of initial data from the temperatures that are *not* being active for the corresponding campaign. The percentage of points sampled for this is given in the `SAMPLED_FRACTIONS` list. For each Monte Carlo iteration, we sample a different batch of initial data that is then being used by the algorithm. In addition, we compare the results to a "baseline" that is not using any Transfer Learning.
+    Since we want to investigate the influence of Transfer Learning, we will provide the campaigns with batches of initial data from the labs that are *not* being active for the corresponding campaign. The percentage of points sampled for this is given in the `SAMPLED_FRACTIONS` list. For each Monte Carlo iteration, we sample a different batch of initial data that is then being used by the algorithm. In addition, we compare the results to a "baseline" that is not using any Transfer Learning.
 
     /// Caution
     Leveraging existing data requires a significant amount of data, in particular when we want to compare different amounts of sampled data. The execution can thus take quite some time if using settings that really show the effect.
@@ -308,7 +310,7 @@ def _(mo):
 
 
 @app.cell
-def _(Campaign, data, pd, temperatures, tl_campaigns):
+def _(Campaign, data, labs, pd, tl_campaigns):
     from baybe.simulation import simulate_scenarios
 
     from baybe.utils.random import set_random_seed
@@ -320,30 +322,29 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
 
     SAMPLE_FRACTIONS = [0.01, 0.05, 0.1, 0.15]
 
-    def optimize_for_temperature(
-        temp: str,
+    def optimize_for_lab(
+        lab: str,
         tl_campaigns: dict[str, Campaign] = tl_campaigns,
         data: pd.DataFrame = data,
         sample_fractions: list[float] = SAMPLE_FRACTIONS
     ):
 
-        lookup_T = data.copy(deep=True)
-        lookup_T["Temp_C"] = lookup_T["Temp_C"].astype(str)
+        lookup = data.copy(deep=True)
 
-        print(f"\n\nTemperature: {temp}")
-        excluded_temps = [str(t) for t in temperatures if str(t) != str(temp)]
+        print(f"\n\nLab: {lab}")
+        excluded_labs = [l for l in labs if l != lab]
 
-        print(f"Taking additional data from {excluded_temps} into account.\n")
-        campaign = tl_campaigns[temp]
-        # Lookup table that contains all data except the data for the current temperature.
-        lookup_other_data = lookup_T[lookup_T["Temp_C"] != str(temp)].copy(deep=True)
+        print(f"Taking additional data from {excluded_labs} into account.\n")
+        campaign = tl_campaigns[lab]
+        # Lookup table that contains all data except the data for the current lab.
+        lookup_other_data = lookup[lookup["Lab"] != lab].copy(deep=True)
 
         results: list[pd.DataFrame] = []
         for p in sample_fractions:
             print("Percentage of data used: ", p)
             result_fraction = simulate_scenarios(
                 {f"{int(100 * p)}": campaign},
-                lookup_T,
+                lookup,
                 initial_data=[
                     lookup_other_data.sample(frac=p) for _ in range(N_MC_ITERATIONS)
                 ],
@@ -355,7 +356,7 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
         print("Percentage of data used: 0.0")
         result_baseline = simulate_scenarios(
             {"0": campaign},
-            lookup_T,
+            lookup,
             batch_size=BATCH_SIZE,
             n_doe_iterations=N_DOE_ITERATIONS,
             n_mc_iterations=N_MC_ITERATIONS,
@@ -372,25 +373,25 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
         )
 
         return results
-    return (optimize_for_temperature,)
+    return (optimize_for_lab,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    We now finally run the simulation code and investigate the results. The variable `temp_to_investigate` can be changed to any of the available temperatures.
+    We now finally run the simulation code and investigate the results. The variable `lab_to_investigate` can be changed to any of the available labs.
     """)
     return
 
 
 @app.cell
-def _(mo, optimize_for_temperature, plt):
+def _(mo, optimize_for_lab, plt):
     from utils import backtest_plot
 
-    TEMP_TO_INVESTIGATE = 105
+    LAB_TO_INVESTIGATE = "B"
 
     backtest_plot(
-        df=optimize_for_temperature(TEMP_TO_INVESTIGATE),
+        df=optimize_for_lab(LAB_TO_INVESTIGATE),
         x="Number of experiments",
         y="Running best yield",
         hue="% of data used",
@@ -407,7 +408,7 @@ def _(mo):
     * `N_DOE_ITERATIONS = 30`
     * `BATCH_SIZE = 2`
     * `N_MC_ITERATIONS = 40`
-    * `TEMP_TO_INVESTIGATE = 105`
+    * `LAB_TO_INVESTIGATE = "B"`
 
     It demonstrates that already a little data can help in the beginning of an experimental campaign, and that although more data is more favourable, the effects are diminishing at some point.
     """)

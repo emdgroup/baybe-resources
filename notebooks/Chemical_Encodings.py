@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.0"
+__generated_with = "0.19.7"
 app = marimo.App(width="medium", app_title="Chemical encodings")
 
 
@@ -15,31 +15,23 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        # Chemical encodings
+    mo.md("""
+    # Chemical encodings
 
-        This file contains some examples related to chemical encodings. Before you start experimenting here, make sure to install the necessary additional requirements via 
-
-        ```
-        pip install -r additional_requirements/Chemical_Encodings_requirements.txt
-        ```
-
-        Note that this example assumes some basic familiarity with using `BayBE`, and that it does not explain all of the core concepts. If you are interested in those, we recommend to first check out the `Reation_Optimization` example.
-        """
-    )
+    This file contains some examples related to chemical encodings. 
+    
+    Note that this example assumes some basic familiarity with using `BayBE`, and that it does not explain all of the core concepts. If you are interested in those, we recommend to first check out the `Reation_Optimization` example.
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        ## Setup
+    mo.md("""
+    ## Setup
 
-        We begin this example by defining a suitable recommender. We use a `TwoPhaseMetaRecommender` equipped with a `BotorchRecommender`. We also use use a specific kernel that is suited particularly well for chemical problems - the [`EDBOKernel`](https://emdgroup.github.io/baybe/0.13.0/_autosummary/baybe.surrogates.gaussian_process.presets.edbo.EDBOKernelFactory.html#baybe.surrogates.gaussian_process.presets.edbo.EDBOKernelFactory).
-        """
-    )
+    We begin this example by defining a suitable recommender. We use a `TwoPhaseMetaRecommender` equipped with a `BotorchRecommender`. We also use use a specific kernel that is suited particularly well for chemical problems - the [`EDBOKernel`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.surrogates.gaussian_process.presets.edbo.EDBOKernelFactory.html#baybe.surrogates.gaussian_process.presets.edbo.EDBOKernelFactory).
+    """)
     return
 
 
@@ -61,9 +53,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """This examples uses the same basic example like the `Reaction_Optimization` notebook. However, we now use different encodings of the chemical parameters. The encoding that should be used can be described by the `encoding` field. We investigate three different encodings here and create one campaign per chemical encoding."""
-    )
+    mo.md("""
+    This examples uses the same basic example like the `Reaction_Optimization` notebook. However, we now use different encodings of the chemical parameters. The encoding that should be used can be described by the `encoding` field. We investigate three different encodings here and create one campaign per chemical encoding.
+    """)
     return
 
 
@@ -85,9 +77,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """Now that we have the data collected, we can creaate different campaigns that we want to compare against each other. To facilitate the usage of `BayBE`'s simulation capabilities, we collect the different campaigns in a `dict`."""
-    )
+    mo.md("""
+    Now that we have the data collected, we can create different campaigns that we want to compare against each other. To facilitate the usage of `BayBE`'s simulation capabilities, we collect the different campaigns in a `dict`.
+    """)
     return
 
 
@@ -103,7 +95,7 @@ def _(df, recommender, substances):
     from baybe.searchspace import SearchSpace
     from baybe.targets import NumericalTarget
 
-    objective = NumericalTarget(name="yield", mode="MAX").to_objective()
+    objective = NumericalTarget(name="yield").to_objective()
 
     substance_encodings = ["MORDRED", "ECFP", "RDKIT2DDESCRIPTORS"]
     scenarios = {
@@ -148,9 +140,9 @@ def _(df, recommender, substances):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """Of course, we also want to compare the campaigns using the chemical encodings to other campaigns not using the special encoding."""
-    )
+    mo.md("""
+    Of course, we also want to compare the campaigns using the chemical encodings to other campaigns not using the special encoding.
+    """)
     return
 
 
@@ -187,17 +179,15 @@ def _(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Using `BayBE`'s [simulation capabilities](https://emdgroup.github.io/baybe/0.13.0/userguide/simulation.html)
+    mo.md(r"""
+    ## Using `BayBE`'s [simulation capabilities](https://emdgroup.github.io/baybe/0.14.2/userguide/simulation.html)
 
-        `BayBE` offers multiple functionalities to “simulate” experimental campaigns with a given lookup mechanism. `BayBE`’s simulation package enables a wide range of use cases and can even be used for “oracle predictions”. This is made possible through the flexible use of lookup mechanisms, which act as the loop-closing element of an optimization loop.
+    `BayBE` offers multiple functionalities to “simulate” experimental campaigns with a given lookup mechanism. `BayBE`’s simulation package enables a wide range of use cases and can even be used for “oracle predictions”. This is made possible through the flexible use of lookup mechanisms, which act as the loop-closing element of an optimization loop.
 
-        Lookups can be provided in a variety of ways, by using fixed data sets, analytical functions, or any other form of black-box callable. In all cases, their role is the same: to retrieve target values for parameter configurations suggested by the recommendation engine.
+    Lookups can be provided in a variety of ways, by using fixed data sets, analytical functions, or any other form of black-box callable. In all cases, their role is the same: to retrieve target values for parameter configurations suggested by the recommendation engine.
 
-        In our case, we can directly use the data that we stored in the `df` dataframe and do the simulation.
-        """
-    )
+    In our case, we can directly use the data that we stored in the `df` dataframe and do the simulation.
+    """)
     return
 
 
@@ -230,9 +220,9 @@ def _(df, scenarios):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """We now visualize the results using the `backtest_plot` utility. This utility "averages" the individual Monte Carlo iterations and shows the mean and a confidence interval. It can also be used to give visual guidance on the performance of individual scenarios."""
-    )
+    mo.md("""
+    We now visualize the results using the `backtest_plot` utility. This utility "averages" the individual Monte Carlo iterations and shows the mean and a confidence interval. It can also be used to give visual guidance on the performance of individual scenarios.
+    """)
     return
 
 

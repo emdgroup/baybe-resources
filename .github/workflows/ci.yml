@@ -35,15 +35,6 @@ jobs:
               continue
             fi
             
-            # Extract the filename without extension
-            filename=$(basename "$script" .py)
-            
-            # Check if there's a specific requirements file for this script
-            if [ -f "additional_requirements/${filename}_requirements.txt" ]; then
-              echo "Installing additional requirements for $filename"
-              pip install -r "additional_requirements/${filename}_requirements.txt"
-            fi
-            
             echo "Running $script"
             python "$script"
           fi

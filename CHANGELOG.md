@@ -12,3 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Notebook on reaction optimization
 - CI tests for execution of notebooks and changes in CHANGELOG
 - Basic description and infrastructure
+
+### Changed
+- Update from BayBE version 0.13.0 to 0.14.2

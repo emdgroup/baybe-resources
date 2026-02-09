@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.0"
+__generated_with = "0.19.7"
 app = marimo.App(width="medium", app_title="Transfer Learning")
 
 
@@ -15,33 +15,29 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        # Transfer learning
+    mo.md(r"""
+    # Transfer learning
 
-        This file contains some examples regarding to the topic of **transfer learning**. It demonstrates how to use `BayBE's` transfer learning capabilities to improve the performance of campaigns if data from similar campaigns is available.
+    This file contains some examples regarding to the topic of **transfer learning**. It demonstrates how to use `BayBE's` transfer learning capabilities to improve the performance of campaigns if data from similar campaigns is available.
 
-        /// admonition | Note
-        The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/stable/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of `BayBE`.
-        ///
+    /// admonition | Note
+    The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of `BayBE`.
+    ///
 
-        /// admonition | Note
-        To really see the effects of transfer learning, it is necessary to run longer tests. Since the goal of this notebook is to demonstrate how to use and set up transfer learning in BayBE, the results obtained by just executing this notebook might not be representative. We thus refer to our [documentation](https://emdgroup.github.io/baybe/stable/) for more detailed plots.
-        ///
-        """
-    )
+    /// admonition | Note
+    To really see the effects of transfer learning, it is necessary to run longer tests. Since the goal of this notebook is to demonstrate how to use and set up transfer learning in BayBE, the results obtained by just executing this notebook might not be representative. We thus refer to our [documentation](https://emdgroup.github.io/baybe/0.14.2/) for more detailed plots.
+    ///
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Some basic settings and data loading
+    mo.md(r"""
+    ## Some basic settings and data loading
 
-        We begin by introducing some settings that will be used later in this notebook. We also load the data, which is the same data used in the `Reaction_Optimization` and `Chemical_Encoding` notebooks.
-        """
-    )
+    We begin by introducing some settings that will be used later in this notebook. We also load the data, which is the same data used in the `Reaction_Optimization` and `Chemical_Encoding` notebooks.
+    """)
     return
 
 
@@ -64,13 +60,11 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Data visualization: Correlation of Data Between Different Temperatures
+    mo.md(r"""
+    ## Data visualization: Correlation of Data Between Different Temperatures
 
-        We first visualize the data, using a small helper function that is defined in the next cell.
-        """
-    )
+    We first visualize the data, using a small helper function that is defined in the next cell.
+    """)
     return
 
 
@@ -176,7 +170,6 @@ def _(parameters_to_analyze, units):
             # show the legend
             ax.legend()
             plt.show()
-
     return Path, analyze_data, plt
 
 
@@ -188,17 +181,15 @@ def _(Path, analyze_data):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Setting up the `BayBE` campaign
+    mo.md(r"""
+    ## Setting up the `BayBE` campaign
 
-        After we have analyzed the data and came to the conclusion that we want to approach this optimization with transfer learning, we now set up our `BayBE` campaign. We first begin by collecting all parts of the campaign that are not related to Transfer Learning.
+    After we have analyzed the data and came to the conclusion that we want to approach this optimization with transfer learning, we now set up our `BayBE` campaign. We first begin by collecting all parts of the campaign that are not related to Transfer Learning.
 
-        ///admonition | Note
-        This example uses substance encodings. In case you are interested in more details on them, check out the `ChemicalEncodings` example!
-        ///
-        """
-    )
+    ///admonition | Note
+    This example uses substance encodings. In case you are interested in more details on them, check out the `ChemicalEncodings` example!
+    ///
+    """)
     return
 
 
@@ -240,21 +231,19 @@ def _(concentrations, pd):
         ),
     ]
 
-    objective = SingleTargetObjective(NumericalTarget(name="yield", mode="MAX"))
+    objective = SingleTargetObjective(NumericalTarget(name="yield"))
     return objective, parameters
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        Transfer Learning in `BayBE` is enabled by using a special parameter - the [`TaskParameter`](https://emdgroup.github.io/baybe/stable/userguide/transfer_learning.html#the-role-of-the-taskparameter). This parameter is used to "mark" the context of individual experiments, and thus to "align" different campaigns along their context dimension. The set of all possible contexts is provided upon the initialization of the `TaskParameter` by providing them as `values`.
+    mo.md("""
+    Transfer Learning in `BayBE` is enabled by using a special parameter - the [`TaskParameter`](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html#the-role-of-the-taskparameter). This parameter is used to "mark" the context of individual experiments, and thus to "align" different campaigns along their context dimension. The set of all possible contexts is provided upon the initialization of the `TaskParameter` by providing them as `values`.
 
-        In this example, each temperature corresponds to a different `context`. The set of `values` is thus the set of all temperatures. The `active_values` describes for which tasks recommendations should be given. This ensures that `BayBE` does not recommend to conduct experiments for a context that might no longer be available.
+    In this example, each temperature corresponds to a different `context`. The set of `values` is thus the set of all temperatures. The `active_values` describes for which tasks recommendations should be given. This ensures that `BayBE` does not recommend to conduct experiments for a context that might no longer be available.
 
-        We can then combine the `TaskParameters` together with the components defined above to create one campaign for each temperature.
-        """
-    )
+    We can then combine the `TaskParameters` together with the components defined above to create one campaign for each temperature.
+    """)
     return
 
 
@@ -283,21 +272,19 @@ def _(objective, parameters, temperatures):
     return Campaign, tl_campaigns
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Setting up the simulation
+    mo.md(r"""
+    ## Setting up the simulation
 
-        We now set up the simulation loop. This requires us to define the number of DoE iterations as well as the number of Monte Carlo iterations.
+    We now set up the simulation loop. This requires us to define the number of DoE iterations as well as the number of Monte Carlo iterations.
 
-        Since we want to investigate the influence of Transfer Learning, we will provide the campaigns with batches of initial data from the temperatures that are *not* being active for the corresponding campaign. For each Monte Carlo iteration, we sample a different batch of initial data that is then being used by the algorithm. In addition, we compare the results to a "baseline" that is not using any Transfer Learning.
+    Since we want to investigate the influence of Transfer Learning, we will provide the campaigns with batches of initial data from the temperatures that are *not* being active for the corresponding campaign. For each Monte Carlo iteration, we sample a different batch of initial data that is then being used by the algorithm. In addition, we compare the results to a "baseline" that is not using any Transfer Learning.
 
-        ///admonition | Note
-        To really see the impact of Transfer Learning, you need to run the following code with more Monte Carlo Iterations, which might take quite some time. If you are interested in looking at some pre-computed results, have a look at the corresponding `.ipynb` version of this notebook.
-        ///
-        """
-    )
+    ///admonition | Note
+    To really see the impact of Transfer Learning, you need to run the following code with more Monte Carlo Iterations, which might take quite some time. If you are interested in looking at some pre-computed results, have a look at the corresponding `.ipynb` version of this notebook.
+    ///
+    """)
     return
 
 
@@ -365,13 +352,14 @@ def _(Campaign, data, pd, temperatures, tl_campaigns):
         )
 
         return results
-
     return (optimize_for_temperature,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We now finally run the simulation code and investigate the results.""")
+    mo.md(r"""
+    We now finally run the simulation code and investigate the results.
+    """)
     return
 
 

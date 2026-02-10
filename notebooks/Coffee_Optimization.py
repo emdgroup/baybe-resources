@@ -16,7 +16,6 @@ def _():
 @app.cell
 def _():
     import pandas as pd
-
     return (pd,)
 
 
@@ -148,13 +147,7 @@ def _(mo):
 
 
 @app.cell
-def _(
-    bean_type,
-    brewing_time,
-    grind_size,
-    water_pressure,
-    water_temperature,
-):
+def _(bean_type, brewing_time, grind_size, water_pressure, water_temperature):
     from baybe.searchspace import SearchSpace
 
     discrete_parameters = [
@@ -308,7 +301,7 @@ def _(campaign_discrete):
     best_discrete = measurements_discrete.loc[measurements_discrete["taste"].idxmax()]
     print(f"Best discrete taste: {best_discrete['taste']:.1f}")
     measurements_discrete
-    return best_discrete, measurements_discrete
+    return (measurements_discrete,)
 
 
 @app.cell(hide_code=True)
@@ -341,7 +334,7 @@ def _(espresso_taste, mo, searchspace_discrete):
     )
 
     _fig, _ax = _plt.subplots(figsize=(8, 4))
-    _ax.hist(all_tastes, bins=_np.arange(1, 11, 0.5), edgecolor="white", alpha=0.8)
+    _ax.hist(all_tastes, bins=_np.arange(1, 11, 0.1), edgecolor="white", alpha=0.8)
     _ax.set(xlabel="Taste Score", ylabel="Count", title="Taste Distribution (Full Discrete Space)")
     _ax.grid(True, alpha=0.3, axis="y")
     _plt.tight_layout()
@@ -413,7 +406,7 @@ def _(mo):
 
 
 @app.cell
-def _(campaign_hybrid, espresso_taste):
+def _(campaign_hybrid, espresso_taste, initial_recommendations):
     # Initial recommendations for hybrid space (5 random experiments)
     initial_recommendations_hybrid = campaign_hybrid.recommend(batch_size=5)
 
@@ -428,17 +421,15 @@ def _(campaign_hybrid, espresso_taste):
         axis=1
     )
 
-    campaign_hybrid.add_measurements(initial_recommendations_hybrid)
-
-    initial_recommendations_hybrid
-    return (initial_recommendations_hybrid,)
+    campaign_hybrid.add_measurements(initial_recommendations)
+    return
 
 
 @app.cell
 def _(campaign_hybrid, espresso_taste, mo):
     # Run optimization iterations for hybrid space (one espresso at a time)
     for iteration_hybrid in mo.status.progress_bar(
-        range(15),
+        range(20),
         title="Optimizing espresso parameters (hybrid)",
     ):
         recommendation_hybrid = campaign_hybrid.recommend(batch_size=1)
@@ -455,7 +446,7 @@ def _(campaign_hybrid, espresso_taste, mo):
         )
 
         campaign_hybrid.add_measurements(recommendation_hybrid)
-    return (iteration_hybrid, recommendation_hybrid)
+    return
 
 
 @app.cell(hide_code=True)
@@ -474,7 +465,7 @@ def _(campaign_hybrid):
     best_hybrid = measurements_hybrid.loc[measurements_hybrid["taste"].idxmax()]
     print(f"Best hybrid taste: {best_hybrid['taste']:.1f}")
     measurements_hybrid
-    return best_hybrid, measurements_hybrid
+    return (measurements_hybrid,)
 
 
 @app.cell(hide_code=True)
@@ -510,9 +501,6 @@ def _(measurements_discrete, measurements_hybrid, mo, pd):
     _plt.tight_layout()
     mo.mpl.interactive(_fig)
     return
-
-
-
 
 
 if __name__ == "__main__":

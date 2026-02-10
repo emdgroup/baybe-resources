@@ -170,38 +170,37 @@ def espresso_taste(
     # This is a weighted combination of three Gaussian peaks representing different
     # espresso styles (ristretto, classic, lungo). Each style has optimal parameter
     # values. The style_score ranges from ~0 (far from any style) to ~3 (perfect match).
-    style_score = 1.2 * classic_score + 0.9 * ristretto_score + 0.85 * lungo_score
+    style_score = 1.3 * classic_score + 0.8 * ristretto_score + 0.7 * lungo_score
     
     # === Add realistic extraction physics penalties ===
     
     # Over-extraction penalty (too fine + too long = bitter)
     over_extraction = (1 - grind_norm) * time_norm
-    over_extraction_penalty = -0.9 * over_extraction**2
+    over_extraction_penalty = -1.1 * over_extraction**2
     
     # Under-extraction penalty (too coarse + too short = sour/weak)
     under_extraction = grind_norm * (1 - time_norm)
-    under_extraction_penalty = -0.75 * under_extraction**2
+    under_extraction_penalty = -0.8 * under_extraction**2
     
     # Temperature extremes penalty
-    temp_extreme_penalty = -1.1 * (adjusted_temp - 0.5)**4
+    temp_extreme_penalty = -1.5 * (adjusted_temp - 0.5)**4
     
     # Pressure-grind interaction: fine grinds need precise pressure control
     pressure_grind_mismatch = abs(pressure_norm - 0.6) * (1 - grind_norm)**2
-    pressure_penalty = -0.6 * pressure_grind_mismatch
+    pressure_penalty = -0.8 * pressure_grind_mismatch
     
     # Channeling risk (too fine grind + too high pressure = uneven extraction)
     channeling_risk = (1 - grind_norm)**2 * (pressure_norm - 0.5)**2
-    channeling_penalty = -0.9 * channeling_risk
+    channeling_penalty = -1 * channeling_risk
     
     # === Combine all components ===
     
     # BASE SCORE: Converts style_score into a taste score on 1-10 scale
     # Formula: base_score = 6.0 + 3.0 * style_score
-    # - The 6.0 offset means even random parameters get ~6/10 (okay)
+    # - The 4.5 offset means even random parameters get ~4.5/10 (okay)
     # - The 3.0 multiplier scales style_score to fill the upper range
-    # - Perfect style match (style_score ≈ 3) gives base_score ≈ 15.0
     # - This gets modulated by bean quality and extraction penalties below
-    base_score = 6.0 + 3.0 * style_score
+    base_score = 4.5 + 3.0 * style_score
     
     # Apply quality modifiers
     quality_modifier = base_quality

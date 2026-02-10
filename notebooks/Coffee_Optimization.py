@@ -13,20 +13,14 @@ def _():
     return (mo,)
 
 
-@app.cell
-def _():
-    import pandas as pd
-    return (pd,)
-
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     # Using `BayBE` to Optimize Espresso Brewing
 
-    This notebook demonstrates how to use BayBE for optimizing espresso brewing parameters. Making a great espresso is challenging: there are many parameters to tune, and they interact in complex ways. Small changes in grind size, temperature, or extraction time can dramatically affect the taste.
+    This notebook demonstrates how to use `BayBE` for optimizing espresso brewing parameters. Making a great espresso is challenging: there are many parameters to tune, and they interact in complex ways. Small changes in grind size, temperature, or extraction time can dramatically affect the taste.
 
-    We'll use BayBE to efficiently explore the parameter space and find optimal brewing conditions that maximize taste quality. This example showcases BayBE's ability to handle both **discrete** and **hybrid** (mixed discrete-continuous) search spaces.
+    We'll use `BayBE` to efficiently explore the parameter space and find optimal brewing conditions that maximize taste quality. This example also showcases that the same problem can be modeled in different ways. For this, it uses `BayBE`'s ability to handle both **discrete** and **hybrid** search spaces.
 
     /// caution
     This notebook was developed for `BayBE` version 0.14.2. Although we do our best in keeping our breaking changes minimal and support outdated versions for a long time, this notebook might not be immediately applicable for other `BayBE` versions.
@@ -48,7 +42,7 @@ def _(mo):
     4. **Water Temperature**: Higher temperatures extract more compounds but can cause bitterness.
     5. **Brewing Time**: Longer extractions yield more flavor but risk over-extraction.
 
-    With 3 bean types, 5 grind settings, 6 pressure levels, 5 temperatures, and 6 brewing times, we have **2,700 possible combinations**. Our goal is to find excellent espresso (taste score > 8.5) using only a small fraction of experiments.
+    In this setting, we will use 3 bean types, 5 grind settings, 6 pressure levels, 5 temperatures, and 6 brewing times. This means that we have **2,700 possible combinations** from which we want to find an excellent espresso with only a small fraction of experiments.
     """)
     return
 
@@ -56,37 +50,17 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Part 1: Discrete Search Space
+    ## Modelling the problem with discrete parameters
 
     We'll start by modeling all parameters as discrete choices. This is a common scenario when equipment has fixed settings (e.g., grinder with numbered settings, machine with preset temperatures).
 
-    ### Defining the Parameters
+    `BayBE` offers a wide range of different parameter types:
 
-    BayBE offers different parameter types. For this example, we use:
-    - [`CategoricalParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.categorical.CategoricalParameter.html) for bean type
-    - [`NumericalDiscreteParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.numerical.NumericalDiscreteParameter.html) for grind size, pressure, temperature, and time
-    """)
-    return
+    - **[`CategoricalParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.categorical.CategoricalParameter.html)**: These are used for distinct categories without inherent numerical ordering. In our example, we use them for the bean type as "Arabica" is not numerically "between" Robusta and Blend.
+    - **[`NumericalDiscreteParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.numerical.NumericalDiscreteParameter.html)**: These are used for numerical values from a finite set where the numerical relationships matter. In our example, these are all other parameters that we described earlier. The key dfference when comparing those parameters with `CategoricalParameter`s is that the numbers carry a meaning: 92°C is closer to 90°C than to 88°C, and `BayBE` uses this structure.
+    - **[`SubstanceParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.categorical.SubstanceParameter.html)**: These are used for modeling chemical substances like solvents, catalysts, ligands, and enable `BayBE` to leverage chemical descriptors for better predictions. More details on this kind of parameters can be found in the `ReactionOptimization` example.
 
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    #### Understanding Parameter Types
-
-    **CategoricalParameter**: Use for distinct categories without inherent numerical ordering.
-    - **Examples**: Bean types, processing methods
-    - **Key insight**: "Arabica" is not numerically "between" Robusta and Blend
-
-    **NumericalDiscreteParameter**: Use for numerical values from a finite set where the numerical relationships matter.
-    - **Examples**: Fixed temperature settings (88, 90, 92°C), pressure levels from equipment presets
-    - **Key insight**: 92°C is closer to 90°C than to 88°C - BayBE uses this structure
-
-    **NumericalContinuousParameter** (Part 2): Use when parameters can take any value within a range.
-    - **Examples**: Precise temperature control (88.0-96.0°C), continuously adjustable flow rates
-    - **Key insight**: Enables fine-grained optimization - can recommend 92.37°C
-
-    **Note**: Chemical substances (solvents, catalysts, ligands) are best modeled using `SubstanceParameter` (see the Reaction Optimization example), which can leverage chemical descriptors for better predictions.
+    For more details, we refer to the [user guide on parameters](https://emdgroup.github.io/baybe/0.14.2/userguide/parameters.html).
     """)
     return
 
@@ -95,15 +69,12 @@ def _(mo):
 def _():
     from baybe.parameters import CategoricalParameter, NumericalDiscreteParameter
 
-    # Categorical parameters
     bean_type = CategoricalParameter(
         name="bean_type",
         values=["Arabica", "Robusta", "Blend"],
         encoding="OHE"
     )
 
-    # Numerical discrete parameters
-    # Grind size in microns (typical espresso range: 200-400 microns)
     grind_size = NumericalDiscreteParameter(
         name="grind_size",
         values=[200, 250, 300, 350, 400],
@@ -159,7 +130,6 @@ def _(bean_type, brewing_time, grind_size, water_pressure, water_temperature):
     ]
 
     searchspace_discrete = SearchSpace.from_product(parameters=discrete_parameters)
-
     print(f"Search space size: {len(searchspace_discrete.discrete.exp_rep)} combinations")
     return SearchSpace, searchspace_discrete
 
@@ -189,9 +159,7 @@ def _(mo):
     mo.md("""
     ### Creating the Campaign
 
-    The [`Campaign`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.campaign.Campaign.html) combines the search space and objective. We use the default [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html), which:
-    - Initially uses random sampling for diverse exploration
-    - Switches to Bayesian optimization once data is available
+    The [`Campaign`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.campaign.Campaign.html) combines the search space and objective. We could also specify the [recommender](https://emdgroup.github.io/baybe/0.14.2/userguide/recommenders.html) to use here, but we use the default [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender initially uses random sampling and switches to a Bayesian optimizer once data is available
     """)
     return
 
@@ -213,10 +181,10 @@ def _(mo):
     ### Running the Optimization Loop
 
     We'll run the optimization iteratively. In each iteration:
-    1. Get a recommendation from `BayBE` (one espresso)
-    2. Brew and taste the espressos (evaluate the hidden taste function)
-    3. Add the measurements back to the campaign
-    4. Repeat
+    1. Get a recommendation from `BayBE` for one espresso
+    2. "Brew" and "taste" the espressos. This is done by evaluating the hidden `espresso_taste` function which simulates us drinking the coffee and giving it a rating on a scale from 1 to 10.
+    3. Add the measurements to the campaign.
+    4. Repeat a certain number of times.
 
     We start with 5 initial random experiments, then perform 20 additional iterations of 1 recommendation each (25 total experiments).
     """)
@@ -225,63 +193,72 @@ def _(mo):
 
 @app.cell
 def _(campaign_discrete):
-    # Get initial recommendations (5 random experiments)
-    initial_recommendations = campaign_discrete.recommend(batch_size=5)
-    initial_recommendations
-    return (initial_recommendations,)
-
-
-@app.cell
-def _(initial_recommendations):
     from utils import espresso_taste
 
-    # Evaluate the taste for initial recommendations
-    initial_recommendations["taste"] = initial_recommendations.apply(
-        lambda row: espresso_taste(
-            bean_type=row["bean_type"],
-            grind_size=row["grind_size"],
-            water_pressure=row["water_pressure"],
-            water_temperature=row["water_temperature"],
-            brewing_time=row["brewing_time"],
-        ),
-        axis=1
-    )
-
+    initial_recommendations = campaign_discrete.recommend(batch_size=5)
+    initial_recommendations = espresso_taste(initial_recommendations)
     initial_recommendations
-    return (espresso_taste,)
+    return espresso_taste, initial_recommendations
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We now add the recommendation together with the measured target value to the campaign before beginning the iterative optimization.
+    """)
+    return
 
 
 @app.cell
 def _(campaign_discrete, initial_recommendations):
-    # Add measurements to campaign
     campaign_discrete.add_measurements(initial_recommendations)
     return
 
 
 @app.cell
 def _(campaign_discrete, espresso_taste, mo):
-    # Run optimization iterations (one at a time)
     for iteration in mo.status.progress_bar(
         range(20),
-        title="Optimizing espresso parameters (discrete)",
+        title="Optimizing your espresso",
     ):
-        # Get recommendation (one espresso)
         recommendations = campaign_discrete.recommend(batch_size=1)
-
-        # Evaluate taste
-        recommendations["taste"] = recommendations.apply(
-            lambda row: espresso_taste(
-                bean_type=row["bean_type"],
-                grind_size=row["grind_size"],
-                water_pressure=row["water_pressure"],
-                water_temperature=row["water_temperature"],
-                brewing_time=row["brewing_time"],
-            ),
-            axis=1
-        )
-
-        # Add to campaign
+        recommendations = espresso_taste(recommendations)
         campaign_discrete.add_measurements(recommendations)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Optimization Progress: Discrete Search Space
+
+    Let's visualize how the optimization progressed by plotting the cumulative best taste score found over the course of the experiments.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(campaign_discrete, mo, plt):
+    # Plot cumulative best taste score
+    discrete_measurements = campaign_discrete.measurements.copy()
+    discrete_measurements["cumulative_best"] = discrete_measurements["taste"].cummax()
+
+    discrete_progress_fig, discrete_progress_ax = plt.subplots(figsize=(8, 4))
+    discrete_progress_ax.plot(
+        range(len(discrete_measurements)), 
+        discrete_measurements["cumulative_best"], 
+        marker="o", 
+    )
+    discrete_progress_ax.set(
+        xlabel="Experiment Number", 
+        ylabel="Best Taste Score Found", 
+        title="Cumulative Best Result"
+    )
+    discrete_progress_ax.grid(True, alpha=0.3)
+    discrete_progress_ax.axhline(y=8.5, color='red', linestyle='--', alpha=0.5, label='Excellent threshold (8.5)')
+    discrete_progress_ax.legend()
+    plt.tight_layout()
+    mo.mpl.interactive(discrete_progress_fig)
     return
 
 
@@ -315,53 +292,39 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(espresso_taste, mo, searchspace_discrete):
-    import matplotlib.pyplot as _plt
-    import numpy as _np
+    import matplotlib.pyplot as plt
+    import numpy as np
 
-    # Evaluate taste for every point in the discrete search space
     all_params = searchspace_discrete.discrete.exp_rep
-    all_tastes = all_params.apply(
-        lambda row: espresso_taste(
-            bean_type=row["bean_type"],
-            grind_size=row["grind_size"],
-            water_pressure=row["water_pressure"],
-            water_temperature=row["water_temperature"],
-            brewing_time=row["brewing_time"],
-        ),
-        axis=1,
-    )
+    all_tastes = espresso_taste(all_params)["taste"]
 
-    _fig, _ax = _plt.subplots(figsize=(8, 4))
-    _ax.hist(all_tastes, bins=_np.arange(1, 11, 0.1), edgecolor="white", alpha=0.8)
-    _ax.set(xlabel="Taste Score", ylabel="Count", title="Taste Distribution (Full Discrete Space)")
-    _ax.grid(True, alpha=0.3, axis="y")
-    _plt.tight_layout()
-    mo.mpl.interactive(_fig)
-    return
+    taste_fig, taste_ax = plt.subplots(figsize=(8, 4))
+    taste_ax.hist(all_tastes, bins=np.arange(1, 11, 0.1), edgecolor="white", alpha=0.8)
+    taste_ax.set(xlabel="Taste Score", ylabel="Count", title="Taste Distribution (Full Discrete Space)")
+    taste_ax.grid(True, alpha=0.3, axis="y")
+    plt.tight_layout()
+    mo.mpl.interactive(taste_fig)
+    return (plt,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Part 2: Hybrid Search Space
+    ## Alternative modelling: Using discrete and continuous parameters
 
-    Modern espresso machines allow precise temperature and time control. We'll now convert two parameters to continuous ranges while keeping grind size discrete (since grinders typically have fixed burr settings):
-    - **Grind size**: Stays discrete (200-400 microns in 50 micron steps)
-    - **Water temperature**: 88°C to 96°C (continuous)
-    - **Brewing time**: 20 to 35 seconds (continuous)
+    Modern espresso machines allow precise temperature and time control. This opens up the possibility to model our process differently by modelling the `NumericalDiscreteParameter`s continuously instead.
 
-    This creates a **hybrid search space** with both discrete (categorical, grind, pressure) and continuous (temperature, time) parameters.
+    This creates a **hybrid search space** with both discrete (categorical) and continuous (all others) parameters.
     """)
     return
 
 
 @app.cell
-def _(SearchSpace, bean_type, grind_size, water_pressure):
+def _(SearchSpace, bean_type):
     from baybe.parameters import NumericalContinuousParameter
 
-    # Convert some parameters to continuous
     water_temperature_continuous = NumericalContinuousParameter(
         name="water_temperature",
         bounds=(88.0, 96.0)
@@ -372,11 +335,20 @@ def _(SearchSpace, bean_type, grind_size, water_pressure):
         bounds=(20.0, 35.0)
     )
 
-    # Create hybrid search space (grind_size stays discrete!)
+    grind_size_continuous = NumericalContinuousParameter(
+        name="grind_size",
+        bounds=(200, 400)
+    )
+
+    water_pressure_continuous = NumericalContinuousParameter(
+        name="water_pressure",
+        bounds=(7.5, 10.0)
+    )
+
     hybrid_parameters = [
         bean_type,
-        grind_size,  # Keep grind size discrete
-        water_pressure,
+        grind_size_continuous,
+        water_pressure_continuous,
         water_temperature_continuous,
         brewing_time_continuous,
     ]
@@ -385,12 +357,26 @@ def _(SearchSpace, bean_type, grind_size, water_pressure):
     return (searchspace_hybrid,)
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    `BayBE` offers two different ways of doing hybrid optimization:
+    1. The [`NaiveHybridSpaceRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.naive.NaiveHybridSpaceRecommender.html) optimizes the discrete and the continuous parts of the search space independently and then combines the best found results.
+    2. The [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html) uses a brute-force optimization that can be computationally expensive for larger discrete subspaces.
+
+    As our discrete space only consists of a single parameter with only three different values, we use the `BotorchRecommender` in the following.
+    """)
+    return
+
+
 @app.cell
 def _(Campaign, objective, searchspace_hybrid):
-    # Create new campaign with hybrid search space
+    from baybe.recommenders import BotorchRecommender, TwoPhaseMetaRecommender
+
     campaign_hybrid = Campaign(
         searchspace=searchspace_hybrid,
-        objective=objective
+        objective=objective,
+        recommender=TwoPhaseMetaRecommender(recommender=BotorchRecommender())
     )
     return (campaign_hybrid,)
 
@@ -400,51 +386,26 @@ def _(mo):
     mo.md("""
     ### Running Hybrid Optimization
 
-    We'll run the same optimization process with the hybrid search space.
+    We'll run the same optimization process with the hybrid search space. To be fair, we provide the hybrid campaign with the same set of initial recommendations before running the optimization.
     """)
     return
 
 
 @app.cell
-def _(campaign_hybrid, espresso_taste, initial_recommendations):
-    # Initial recommendations for hybrid space (5 random experiments)
-    initial_recommendations_hybrid = campaign_hybrid.recommend(batch_size=5)
-
-    initial_recommendations_hybrid["taste"] = initial_recommendations_hybrid.apply(
-        lambda row: espresso_taste(
-            bean_type=row["bean_type"],
-            grind_size=row["grind_size"],
-            water_pressure=row["water_pressure"],
-            water_temperature=row["water_temperature"],
-            brewing_time=row["brewing_time"],
-        ),
-        axis=1
-    )
-
+def _(campaign_hybrid, initial_recommendations):
     campaign_hybrid.add_measurements(initial_recommendations)
     return
 
 
 @app.cell
 def _(campaign_hybrid, espresso_taste, mo):
-    # Run optimization iterations for hybrid space (one espresso at a time)
+
     for iteration_hybrid in mo.status.progress_bar(
         range(20),
         title="Optimizing espresso parameters (hybrid)",
     ):
         recommendation_hybrid = campaign_hybrid.recommend(batch_size=1)
-
-        recommendation_hybrid["taste"] = recommendation_hybrid.apply(
-            lambda row: espresso_taste(
-                bean_type=row["bean_type"],
-                grind_size=row["grind_size"],
-                water_pressure=row["water_pressure"],
-                water_temperature=row["water_temperature"],
-                brewing_time=row["brewing_time"],
-            ),
-            axis=1
-        )
-
+        recommendation_hybrid = espresso_taste(recommendation_hybrid)
         campaign_hybrid.add_measurements(recommendation_hybrid)
     return
 
@@ -478,12 +439,11 @@ def _(mo):
     return
 
 
-@app.cell
-def _(measurements_discrete, measurements_hybrid, mo, pd):
-    import matplotlib.pyplot as _plt
-    import seaborn as _sns
+@app.cell(hide_code=True)
+def _(measurements_discrete, measurements_hybrid, mo, plt):
+    import seaborn as sns
+    import pandas as pd
 
-    # Build cumulative-best data
     disc = measurements_discrete[["taste"]].copy()
     disc["approach"], disc["experiment"] = "Discrete", range(len(disc))
     disc["best"] = disc["taste"].cummax()
@@ -494,12 +454,18 @@ def _(measurements_discrete, measurements_hybrid, mo, pd):
 
     combined = pd.concat([disc, hyb])
 
-    _fig, _ax = _plt.subplots(figsize=(8, 5))
-    _sns.lineplot(data=combined, x="experiment", y="best", hue="approach", marker="o", markersize=5, ax=_ax)
-    _ax.set(xlabel="Experiment", ylabel="Best Taste Score", title="Optimization Progress")
-    _ax.grid(True, alpha=0.3)
-    _plt.tight_layout()
-    mo.mpl.interactive(_fig)
+    hybrid_fig, hybrid_ax = plt.subplots(figsize=(8, 5))
+    sns.lineplot(data=combined, x="experiment", y="best", hue="approach", marker="o",ax=hybrid_ax)
+    hybrid_ax.set(xlabel="Experiment", ylabel="Best Taste Score", title="Optimization Progress")
+    hybrid_ax.axhline(y=8.5, color='red', linestyle='--', alpha=0.5, label='Excellent threshold (8.5)')
+    hybrid_ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    mo.mpl.interactive(hybrid_fig)
+    return
+
+
+@app.cell
+def _():
     return
 
 

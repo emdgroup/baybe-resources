@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Jupyter notebook version of the reaction optimization notebook
 - Jupyter notebook version of the transfer learning notebook
 - Notebook on coffee machine optimization
+- Notebook on gold mining
 
 ### Changed
 - Update from BayBE version 0.13.0 to 0.14.2

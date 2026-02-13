@@ -322,8 +322,8 @@ def _(mo):
 def _(mine, scenarios):
     from baybe.simulation import simulate_scenarios
 
-    N_DOE_ITERATIONS = 30  # Number of optimization iterations per run
-    N_MC_ITERATIONS = 30  # Number of Monte Carlo runs
+    N_DOE_ITERATIONS = 4  # Number of optimization iterations per run - incraese to ~30 for better results
+    N_MC_ITERATIONS = 4  # Number of Monte Carlo runs - incraese to ~30 for better results
 
     results = simulate_scenarios(
         scenarios,

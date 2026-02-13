@@ -222,3 +222,150 @@ def espresso_taste(df: pd.DataFrame) -> pd.DataFrame:
     
     result["taste"] = final_score
     return result
+
+
+class GoldMine:
+    """A 2D landscape with multiple Gaussian peaks for optimization demonstration.
+
+    This class represents a gold mining landscape where peaks correspond to gold-rich
+    regions. It can be used to demonstrate optimization algorithms by providing a
+    continuous 2D function that can be evaluated at any point.
+
+    Attributes:
+        grid_size: Resolution of the landscape grid.
+        n_peaks: Number of gold-rich regions (peaks).
+        noise_level: Amount of random noise added to the landscape.
+        X: Meshgrid x-coordinates.
+        Y: Meshgrid y-coordinates.
+        Z: Gold richness values at each grid point.
+    """
+
+    def __init__(
+        self,
+        grid_size: int = 100,
+        n_peaks: int = 5,
+        noise_level: float = 0.1,
+    ):
+        """Initialize a gold mining landscape.
+
+        Args:
+            grid_size: Resolution of the grid.
+            n_peaks: Number of gold-rich regions (peaks).
+            noise_level: Amount of random noise.
+        """
+        import numpy as np
+
+        self.grid_size = grid_size
+        self.n_peaks = n_peaks
+        self.noise_level = noise_level
+
+        x = np.linspace(0, 1, grid_size)
+        y = np.linspace(0, 1, grid_size)
+        self.X, self.Y = np.meshgrid(x, y)
+        self.Z = np.zeros_like(self.X)
+
+        # Generate random peaks
+        for _ in range(n_peaks):
+            x_center = np.random.uniform(0.2, 0.8)
+            y_center = np.random.uniform(0.2, 0.8)
+            amplitude = np.random.uniform(5, 10)
+            sigma_x = np.random.uniform(0.05, 0.15)
+            sigma_y = np.random.uniform(0.05, 0.15)
+
+            self.Z += amplitude * np.exp(
+                -(
+                    (self.X - x_center) ** 2 / (2 * sigma_x**2)
+                    + (self.Y - y_center) ** 2 / (2 * sigma_y**2)
+                )
+            )
+
+        # Add noise
+        self.Z += np.random.randn(*self.Z.shape) * noise_level
+        self.Z = np.maximum(self.Z, 0)
+
+    def evaluate(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Evaluate the gold richness for a DataFrame of locations.
+
+        Takes a DataFrame with 'x' and 'y' columns (as returned by
+        ``campaign.recommend()``), adds a 'gold_richness' column, and returns
+        the DataFrame. This makes it directly usable as a lookup function for
+        ``simulate_scenarios``.
+
+        Args:
+            df: DataFrame with 'x' and 'y' columns. Typically the output of
+                ``campaign.recommend()``.
+
+        Returns:
+            The input DataFrame with an added 'gold_richness' column.
+        """
+        import numpy as np
+        from scipy.interpolate import RegularGridInterpolator
+
+        x_coords = self.X[0, :]
+        y_coords = self.Y[:, 0]
+        interpolator = RegularGridInterpolator((y_coords, x_coords), self.Z)
+
+        points = np.column_stack([df["y"].values, df["x"].values])
+        df["gold_richness"] = interpolator(points)
+        return df
+
+    def plot(self, samples: pd.DataFrame | None = None, title: str = "Gold Mining Landscape"):
+        """Visualize the landscape with optional sample points.
+
+        Args:
+            samples: Optional DataFrame with 'x', 'y', and 'value' columns.
+            title: Plot title.
+
+        Returns:
+            Matplotlib figure.
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LinearSegmentedColormap
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        # Create gold-themed colormap
+        colors = ["#2C1810", "#8B4513", "#DAA520", "#FFD700", "#FFED4E"]
+        cmap = LinearSegmentedColormap.from_list("gold", colors, N=100)
+
+        # Plot landscape
+        contour = ax.contourf(self.X, self.Y, self.Z, levels=20, cmap=cmap, alpha=0.8)
+        plt.colorbar(contour, ax=ax, label="Gold Richness")
+
+        # Plot sample points if provided
+        if samples is not None and len(samples) > 0:
+            ax.scatter(
+                samples["x"],
+                samples["y"],
+                c=samples["value"],
+                s=100,
+                cmap=cmap,
+                edgecolors="black",
+                linewidths=2,
+                marker="X",
+                vmin=self.Z.min(),
+                vmax=self.Z.max(),
+                zorder=5,
+            )
+
+            # Add numbers to show sampling order
+            for idx, row in samples.iterrows():
+                ax.annotate(
+                    str(idx + 1),
+                    (row["x"], row["y"]),
+                    xytext=(0, 10),
+                    textcoords="offset points",
+                    ha="center",
+                    fontsize=8,
+                    fontweight="bold",
+                    color="white",
+                    bbox=dict(boxstyle="circle,pad=0.3", facecolor="black", alpha=0.7),
+                )
+
+        ax.set_xlabel("Longitude", fontsize=12)
+        ax.set_ylabel("Latitude", fontsize=12)
+        ax.set_title(title, fontsize=14, fontweight="bold")
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+
+        return fig

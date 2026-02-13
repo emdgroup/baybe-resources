@@ -86,7 +86,7 @@ def _(mo):
     mo.md(r"""
     Our goal is to identify one of the top candidates, that is, one of the 18 experiments with a yield larger than 90 using only a few experiments.
 
-    We will begin by identifying 10 initial reaction conditions. In practice, we would then run experiments to evaluate these conditions and record the corresponding reaction yields. However, in this case, we will look up the yields in a table. With the conditions and yields in hand, we can build a Bayesian model and use this model to select another 5 reaction conditions. We will then look up the yields for the 5 conditions and use this information to update the model. We will repeat this process through 5 rounds of optimization and examine the reaction yields for each optimization cycle.
+    We will begin by identifying 10 initial reaction conditions. In practice, we would then run experiments to evaluate these conditions and record the corresponding reaction yields. However, in this case, we will look up the yields in a table. With the conditions and yields in hand, we can build a Bayesian model and use this model to select another 5 reaction conditions. We will then look up the yields for the 5 conditions and use this information to update the model. We will repeat this process through 10 rounds of optimization and examine the reaction yields for each optimization cycle.
     """)
     return
 
@@ -314,7 +314,7 @@ def _(mo):
     1. Ask the `campaign` for another set of 5 recommendations. Now that we've added measurements, the Campaign uses the underlying Bayesian model to select the next set of reaction conditions.
     2. Next we will look up the yield for that set of conditions and use the yield data to update the Bayesian model.
 
-    We'll repeat this process 5 times and examine the distribution of yields at each iteration.
+    We'll repeat this process 10 times and examine the distribution of yields at each iteration.
     """)
     return
 

@@ -12,8 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Notebook on reaction optimization
 - CI tests for execution of notebooks and changes in CHANGELOG
 - Basic description and infrastructure
-- Jupyter notebook version of the reaction optimization notebook
-- Jupyter notebook version of the transfer learning notebook
+- ~~Jupyter notebook version of the reaction optimization notebook~~ See **Removed**
+- ~~Jupyter notebook version of the transfer learning notebook~~ See **Removed**
 - Notebook on coffee machine optimization
 - Notebook on gold mining
 
@@ -22,3 +22,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Notebook on chemical encodings was merged with notebook on reaction optimization
+- Jupyter notebook variants of `marimo` notebooks

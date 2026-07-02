@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.19.7"
+__generated_with = "0.23.13"
 app = marimo.App(width="full", app_title="Reaction Optimization")
 
 
@@ -488,8 +488,8 @@ def _(df, scenarios):
     from baybe.simulation import simulate_scenarios
 
     BATCH_SIZE = 2
-    N_DOE_ITERATIONS = 5  # Change to ~20 for better plots
-    N_MC_ITERATIONS = 10  # Change to ~30 for better plots
+    N_DOE_ITERATIONS = 12  # Change to ~20 for better plots
+    N_MC_ITERATIONS = 15  # Change to ~30 for better plots
 
     results = simulate_scenarios(
         scenarios,

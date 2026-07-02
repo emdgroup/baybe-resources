@@ -21,7 +21,7 @@ def _(mo):
     This file contains some examples regarding to the topic of **transfer learning**. It demonstrates how to use BayBE's transfer learning capabilities to improve the performance of campaigns if data from similar campaigns is available.
 
     /// Note
-    The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of BayBE.
+    The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.15.0/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of BayBE.
     ///
 
     /// Caution
@@ -257,7 +257,7 @@ def _(concentrations, pd):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    Transfer Learning in `BayBE` is enabled by using a special parameter - the [`TaskParameter`](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html#the-role-of-the-taskparameter). This parameter is used to "mark" the context of individual experiments, and thus to "align" different campaigns along their context dimension. The set of all possible contexts is provided upon the initialization of the `TaskParameter` by providing them as `values`.
+    Transfer Learning in `BayBE` is enabled by using a special parameter - the [`TaskParameter`](https://emdgroup.github.io/baybe/0.15.0/userguide/transfer_learning.html#the-role-of-the-taskparameter). This parameter is used to "mark" the context of individual experiments, and thus to "align" different campaigns along their context dimension. The set of all possible contexts is provided upon the initialization of the `TaskParameter` by providing them as `values`.
 
     In this example, each lab corresponds to a different `context`. The set of `values` is thus the set of all labs. The `active_values` describes for which tasks recommendations should be given. This ensures that `BayBE` does not recommend to conduct experiments for a context that might no longer be available.
 

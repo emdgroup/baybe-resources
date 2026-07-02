@@ -58,9 +58,9 @@ def _(mo):
 
     - **[`CategoricalParameter`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.parameters.categorical.CategoricalParameter.html)**: These are used for distinct categories without inherent numerical ordering. In our example, we use them for the bean type as "Arabica" is not numerically "between" Robusta and Blend.
     - **[`NumericalDiscreteParameter`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.parameters.numerical.NumericalDiscreteParameter.html)**: These are used for numerical values from a finite set where the numerical relationships matter. In our example, these are all other parameters that we described earlier. The key difference when comparing those parameters with `CategoricalParameter`s is that the numbers carry a meaning: 92°C is closer to 90°C than to 88°C, and `BayBE` uses this structure.
-    - **[`SubstanceParameter`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.parameters.categorical.SubstanceParameter.html)**: These are used for modeling chemical substances like solvents, catalysts, ligands, and enable `BayBE` to leverage chemical descriptors for better predictions. More details on this kind of parameters can be found in the `ReactionOptimization` example.
+    - **[`SubstanceParameter`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.parameters.substance.SubstanceParameter.html)**: These are used for modeling chemical substances like solvents, catalysts, ligands, and enable `BayBE` to leverage chemical descriptors for better predictions. More details on this kind of parameters can be found in the `ReactionOptimization` example.
 
-    For more details, we refer to the [user guide on parameters](https://emdgroup.github.io/baybe/0.15.0/userguide/parameters.html).
+    For more details, we refer to the [user guide on parameters](https://emdgroup.github.io/baybe/0.15.0/components/parameters.html).
     """)
     return
 
@@ -159,7 +159,7 @@ def _(mo):
     mo.md("""
     ### Creating the Campaign
 
-    The [`Campaign`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.campaign.Campaign.html) combines the search space and objective. We could also specify the [recommender](https://emdgroup.github.io/baybe/0.15.0/userguide/recommenders.html) to use here, but we use the default [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender initially uses random sampling and switches to a Bayesian optimizer once data is available
+    The [`Campaign`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.campaign.Campaign.html) combines the search space and objective. We could also specify the [recommender](https://emdgroup.github.io/baybe/0.15.0/components/recommenders.html) to use here, but we use the default [`TwoPhaseMetaRecommender`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.recommenders.meta.sequential.TwoPhaseMetaRecommender.html). This recommender initially uses random sampling and switches to a Bayesian optimizer once data is available
     """)
     return
 
@@ -362,7 +362,7 @@ def _(mo):
     mo.md(r"""
     `BayBE` offers two different ways of doing hybrid optimization:
     1. The [`NaiveHybridSpaceRecommender`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.recommenders.naive.NaiveHybridSpaceRecommender.html) optimizes the discrete and the continuous parts of the search space independently and then combines the best found results.
-    2. The [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.recommenders.pure.bayesian.botorch.BotorchRecommender.html) uses a brute-force optimization that can be computationally expensive for larger discrete subspaces.
+    2. The [`BotorchRecommender`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.recommenders.pure.bayesian.botorch.core.BotorchRecommender.html) uses a brute-force optimization that can be computationally expensive for larger discrete subspaces.
 
     As our discrete space only consists of a single parameter with only three different values, we use the `BotorchRecommender` in the following.
     """)

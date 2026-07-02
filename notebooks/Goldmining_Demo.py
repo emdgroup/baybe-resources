@@ -121,7 +121,7 @@ def _(mo):
     mo.md(r"""
     ### Define the Target and Objective
 
-    The [`NumericalTarget`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.targets.numerical.NumericalTarget.html) represents the quantity we want to optimize (gold richness). We wrap it in a [`SingleTargetObjective`](https://emdgroup.github.io/baybe/0.15.0/userguide/objectives.html#singletargetobjective) since we're optimizing a single objective. By default, `BayBE` maximizes the target.
+    The [`NumericalTarget`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.targets.numerical.NumericalTarget.html) represents the quantity we want to optimize (gold richness). We wrap it in a [`SingleTargetObjective`](https://emdgroup.github.io/baybe/0.15.0/components/objectives.html#singletargetobjective) since we're optimizing a single objective. By default, `BayBE` maximizes the target.
     """)
     return
 

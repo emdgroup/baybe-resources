@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.19.7"
+__generated_with = "0.23.13"
 app = marimo.App(width="medium", app_title="Transfer Learning")
 
 
@@ -21,7 +21,7 @@ def _(mo):
     This file contains some examples regarding to the topic of **transfer learning**. It demonstrates how to use BayBE's transfer learning capabilities to improve the performance of campaigns if data from similar campaigns is available.
 
     /// Note
-    The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of BayBE.
+    The term *transfer learning* is somewhat ambiguous, and different people might have different interpretations of what is meant by this term. We thus recommend to first read [the userguide on transfer learning](https://emdgroup.github.io/baybe/0.15.0/concepts/transfer_learning.html) to ensure that it is clear how to interpret this term in the context of BayBE.
     ///
 
     /// Caution
@@ -121,7 +121,9 @@ def _():
 
             ## Correlation between yields at v1 and v2
             corr, _ = stats.pearsonr(yields_v1, yields_v2)
-            unit_str = f" {units[parameter_to_analyze]}" if units[parameter_to_analyze] else ""
+            unit_str = (
+                f" {units[parameter_to_analyze]}" if units[parameter_to_analyze] else ""
+            )
             print(
                 f"Pearson correlation coefficient (PCC) between yields at "
                 f"{v1}{unit_str} and "
@@ -161,9 +163,7 @@ def _():
             ax.set_xlabel(f"yield at {v1}{unit_str}")
             ax.set_ylabel(f"yield at {v2}{unit_str}")
             ax.set_title(
-                f"{parameter_to_analyze} combination: "
-                f"{v1}{unit_str} to "
-                f"{v2}{unit_str}"
+                f"{parameter_to_analyze} combination: {v1}{unit_str} to {v2}{unit_str}"
             )
             # include 1:1 line
             ax.plot(x, x, color="black", linestyle="--", label="1:1 line")
@@ -171,6 +171,7 @@ def _():
             # show the legend
             ax.legend()
             plt.show()
+
     return Path, analyze_data, concentrations, labs, plt
 
 
@@ -257,7 +258,7 @@ def _(concentrations, pd):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    Transfer Learning in `BayBE` is enabled by using a special parameter - the [`TaskParameter`](https://emdgroup.github.io/baybe/0.14.2/userguide/transfer_learning.html#the-role-of-the-taskparameter). This parameter is used to "mark" the context of individual experiments, and thus to "align" different campaigns along their context dimension. The set of all possible contexts is provided upon the initialization of the `TaskParameter` by providing them as `values`.
+    Transfer Learning in `BayBE` is enabled by using a special parameter - the [`TaskParameter`](https://emdgroup.github.io/baybe/0.15.0/concepts/transfer_learning.html#the-role-of-the-taskparameter). This parameter is used to "mark" the context of individual experiments, and thus to "align" different campaigns along their context dimension. The set of all possible contexts is provided upon the initialization of the `TaskParameter` by providing them as `values`.
 
     In this example, each lab corresponds to a different `context`. The set of `values` is thus the set of all labs. The `active_values` describes for which tasks recommendations should be given. This ensures that `BayBE` does not recommend to conduct experiments for a context that might no longer be available.
 
@@ -315,9 +316,9 @@ def _(Campaign, data, labs, pd, tl_campaigns):
 
     from baybe.utils.random import set_random_seed
 
-    N_DOE_ITERATIONS = 2
+    N_DOE_ITERATIONS = 5
     BATCH_SIZE = 2
-    N_MC_ITERATIONS = 3
+    N_MC_ITERATIONS = 2
     set_random_seed(1337)
 
     SAMPLE_FRACTIONS = [0.01, 0.05, 0.1, 0.15]
@@ -326,9 +327,8 @@ def _(Campaign, data, labs, pd, tl_campaigns):
         lab: str,
         tl_campaigns: dict[str, Campaign] = tl_campaigns,
         data: pd.DataFrame = data,
-        sample_fractions: list[float] = SAMPLE_FRACTIONS
+        sample_fractions: list[float] = SAMPLE_FRACTIONS,
     ):
-
         lookup = data.copy(deep=True)
 
         print(f"\n\nLab: {lab}")
@@ -373,6 +373,7 @@ def _(Campaign, data, labs, pd, tl_campaigns):
         )
 
         return results
+
     return (optimize_for_lab,)
 
 
@@ -418,7 +419,8 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.image(
-        src="images/transfer_learning_precomputed.png", caption="Reaction being optimized in this tutorial."
+        src="images/transfer_learning_precomputed.png",
+        caption="Reaction being optimized in this tutorial.",
     )
     return
 

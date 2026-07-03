@@ -34,7 +34,7 @@ def _(mo):
     - Process optimization (reaction conditions)
 
     /// caution
-    This notebook was developed for `BayBE` version 0.14.2. Although we do our best in keeping our breaking changes minimal and support outdated versions for a long time, this notebook might not be immediately applicable for other `BayBE` versions. If you install `BayBE` via the instructions in this repository, version 0.14.2 will thus be installed.
+    This notebook was developed for `BayBE` version 0.15.0. Although we do our best in keeping our breaking changes minimal and support outdated versions for a long time, this notebook might not be immediately applicable for other `BayBE` versions. If you install `BayBE` via the instructions in this repository, version 0.15.0 will thus be installed.
     ///
     """)
     return
@@ -82,7 +82,7 @@ def _(mo):
 
     ### Define the Parameters
 
-    We define two continuous parameters representing the 2D coordinates of our mining landscape. `BayBE` uses [`NumericalContinuousParameter`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.parameters.numerical.NumericalContinuousParameter.html) for parameters that can take any value within a specified range.
+    We define two continuous parameters representing the 2D coordinates of our mining landscape. `BayBE` uses [`NumericalContinuousParameter`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.parameters.numerical.NumericalContinuousParameter.html) for parameters that can take any value within a specified range.
     """)
     return
 
@@ -103,7 +103,7 @@ def _(mo):
     mo.md(r"""
     ### Define the Search Space
 
-    The [`SearchSpace`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.searchspace.html) defines all possible parameter combinations that can be explored. We use [`SearchSpace.from_product`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.searchspace.core.SearchSpace.html#baybe.searchspace.core.SearchSpace.from_product) to create the Cartesian product of our parameters. In this example, our search space is effectively just the unit square in two dimensions.
+    The [`SearchSpace`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.searchspace.html) defines all possible parameter combinations that can be explored. We use [`SearchSpace.from_product`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.searchspace.core.SearchSpace.html#baybe.searchspace.core.SearchSpace.from_product) to create the Cartesian product of our parameters. In this example, our search space is effectively just the unit square in two dimensions.
     """)
     return
 
@@ -121,7 +121,7 @@ def _(mo):
     mo.md(r"""
     ### Define the Target and Objective
 
-    The [`NumericalTarget`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.targets.numerical.NumericalTarget.html) represents the quantity we want to optimize (gold richness). We wrap it in a [`SingleTargetObjective`](https://emdgroup.github.io/baybe/0.14.2/userguide/objectives.html#singletargetobjective) since we're optimizing a single objective. By default, `BayBE` maximizes the target.
+    The [`NumericalTarget`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.targets.numerical.NumericalTarget.html) represents the quantity we want to optimize (gold richness). We wrap it in a [`SingleTargetObjective`](https://emdgroup.github.io/baybe/0.15.0/components/objectives.html#singletargetobjective) since we're optimizing a single objective. By default, `BayBE` maximizes the target.
     """)
     return
 
@@ -282,7 +282,7 @@ def _(mo):
     A single run can be misleading due to randomness. To get a statistically robust comparison, we now run both methods multiple times using `BayBE`'s simulation utilities. This averages over the randomness in the optimization process and provides confidence intervals.
 
     We'll set up two scenarios:
-    1. **Random Search**: Uses [`RandomRecommender`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.recommenders.pure.nonpredictive.sampling.RandomRecommender.html) for pure random sampling
+    1. **Random Search**: Uses [`RandomRecommender`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.recommenders.pure.nonpredictive.sampling.RandomRecommender.html) for pure random sampling
     2. **`BayBE` Optimization**: Uses the default recommender for intelligent Bayesian optimization
     """)
     return
@@ -309,7 +309,7 @@ def _(mo):
     mo.md(r"""
     ### Run the Simulations
 
-    We use [`simulate_scenarios`](https://emdgroup.github.io/baybe/0.14.2/_autosummary/baybe.simulation.scenarios.html#baybe.simulation.scenarios.simulate_scenarios) to execute the optimization campaigns. This function runs each scenario multiple times and collects performance statistics.
+    We use [`simulate_scenarios`](https://emdgroup.github.io/baybe/0.15.0/_autosummary/baybe.simulation.scenarios.html#baybe.simulation.scenarios.simulate_scenarios) to execute the optimization campaigns. This function runs each scenario multiple times and collects performance statistics.
 
     /// note
     When running the simulations, you may see warnings from `RandomRecommender` about unused objectives and measurements. This is expected and harmless. `RandomRecommender` samples points uniformly at random without considering the objective function or learning from previous measurements, which is why these inputs are ignored. The warnings serve as a reminder that random search does not utilize the optimization machinery that makes `BayBE` effective.

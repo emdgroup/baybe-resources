@@ -7,10 +7,15 @@ app = marimo.App(width="full", app_title="Reaction Optimization")
 @app.cell
 def _():
     import marimo as mo
+    import os
     import warnings
 
     warnings.filterwarnings("ignore")
-    return (mo,)
+
+    # If the SMOKE_TEST environment variable is set (e.g. in CI), iteration counts are
+    # reduced so the notebook runs quickly. Unset it for full-fidelity results.
+    SMOKE_TEST = "SMOKE_TEST" in os.environ
+    return SMOKE_TEST, mo
 
 
 @app.cell(hide_code=True)
@@ -320,9 +325,9 @@ def _(mo):
 
 
 @app.cell
-def _(campaign, df, merge_columns, mo):
+def _(SMOKE_TEST, campaign, df, merge_columns, mo):
     for _ in mo.status.progress_bar(
-        range(10),
+        range(2 if SMOKE_TEST else 10),
         title="Optimizing reaction conditions",
     ):
         rec = campaign.recommend(5)
@@ -484,12 +489,12 @@ def _(mo):
 
 
 @app.cell
-def _(df, scenarios):
+def _(SMOKE_TEST, df, scenarios):
     from baybe.simulation import simulate_scenarios
 
     BATCH_SIZE = 2
-    N_DOE_ITERATIONS = 12  # Change to ~20 for better plots
-    N_MC_ITERATIONS = 15  # Change to ~30 for better plots
+    N_DOE_ITERATIONS = 2 if SMOKE_TEST else 12  # Change to ~20 for better plots
+    N_MC_ITERATIONS = 2 if SMOKE_TEST else 15  # Change to ~30 for better plots
 
     results = simulate_scenarios(
         scenarios,

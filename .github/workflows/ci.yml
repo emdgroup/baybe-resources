@@ -25,6 +25,8 @@ jobs:
         pip install -r requirements.txt
         
     - name: Run notebook scripts
+      env:
+        SMOKE_TEST: "true"
       run: |
         for script in notebooks/*.py; do
           if [ -f "$script" ]; then

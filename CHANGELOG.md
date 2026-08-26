@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- `SMOKE_TEST` switch for notebooks that reduces iteration counts in CI for faster runs
 - Notebook on transfer learning
 - ~~Notebook on chemical encodings~~ See **Removed**
 - CODEOWNERS file

@@ -7,10 +7,15 @@ app = marimo.App(width="medium", app_title="Transfer Learning")
 @app.cell
 def _():
     import marimo as mo
+    import os
     import warnings
 
     warnings.filterwarnings("ignore")
-    return (mo,)
+
+    # If the SMOKE_TEST environment variable is set (e.g. in CI), iteration counts are
+    # reduced so the notebook runs quickly. Unset it for full-fidelity results.
+    SMOKE_TEST = "SMOKE_TEST" in os.environ
+    return SMOKE_TEST, mo
 
 
 @app.cell(hide_code=True)
@@ -311,17 +316,17 @@ def _(mo):
 
 
 @app.cell
-def _(Campaign, data, labs, pd, tl_campaigns):
+def _(SMOKE_TEST, Campaign, data, labs, pd, tl_campaigns):
     from baybe.simulation import simulate_scenarios
 
     from baybe.utils.random import set_random_seed
 
-    N_DOE_ITERATIONS = 5
+    N_DOE_ITERATIONS = 2 if SMOKE_TEST else 5
     BATCH_SIZE = 2
     N_MC_ITERATIONS = 2
     set_random_seed(1337)
 
-    SAMPLE_FRACTIONS = [0.01, 0.05, 0.1, 0.15]
+    SAMPLE_FRACTIONS = [0.01] if SMOKE_TEST else [0.01, 0.05, 0.1, 0.15]
 
     def optimize_for_lab(
         lab: str,

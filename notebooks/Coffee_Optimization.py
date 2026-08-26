@@ -7,10 +7,15 @@ app = marimo.App(width="full", app_title="Espresso Optimization")
 @app.cell
 def _():
     import marimo as mo
+    import os
     import warnings
 
     warnings.filterwarnings("ignore")
-    return (mo,)
+
+    # If the SMOKE_TEST environment variable is set (e.g. in CI), iteration counts are
+    # reduced so the notebook runs quickly. Unset it for full-fidelity results.
+    SMOKE_TEST = "SMOKE_TEST" in os.environ
+    return SMOKE_TEST, mo
 
 
 @app.cell(hide_code=True)
@@ -216,9 +221,9 @@ def _(campaign_discrete, initial_recommendations):
 
 
 @app.cell
-def _(campaign_discrete, espresso_taste, mo):
+def _(SMOKE_TEST, campaign_discrete, espresso_taste, mo):
     for iteration in mo.status.progress_bar(
-        range(20),
+        range(2 if SMOKE_TEST else 20),
         title="Optimizing your espresso",
     ):
         recommendations = campaign_discrete.recommend(batch_size=1)
@@ -398,10 +403,10 @@ def _(campaign_hybrid, initial_recommendations):
 
 
 @app.cell
-def _(campaign_hybrid, espresso_taste, mo):
+def _(SMOKE_TEST, campaign_hybrid, espresso_taste, mo):
 
     for iteration_hybrid in mo.status.progress_bar(
-        range(20),
+        range(2 if SMOKE_TEST else 20),
         title="Optimizing espresso parameters (hybrid)",
     ):
         recommendation_hybrid = campaign_hybrid.recommend(batch_size=1)

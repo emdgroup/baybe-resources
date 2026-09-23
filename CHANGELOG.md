@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Update from BayBE version 0.13.0 to 0.14.2
 - Update from BayBE version 0.14.2 to 0.15.0
+- Update workshop notebook BayBE version to 0.15.0 and add Botorch pin to run notebook in Colab
 
 ### Removed
 - Notebook on chemical encodings was merged with notebook on reaction optimization

@@ -7,10 +7,15 @@ app = marimo.App(width="medium", app_title="Gold Mining Optimization")
 @app.cell
 def _():
     import marimo as mo
+    import os
     import warnings
 
     warnings.filterwarnings("ignore")
-    return (mo,)
+
+    # If the SMOKE_TEST environment variable is set (e.g. in CI), iteration counts are
+    # reduced so the notebook runs quickly. Unset it for full-fidelity results.
+    SMOKE_TEST = "SMOKE_TEST" in os.environ
+    return SMOKE_TEST, mo
 
 
 @app.cell(hide_code=True)
@@ -145,7 +150,7 @@ def _(mo):
 
 
 @app.cell
-def _(mine, objective, searchspace):
+def _(SMOKE_TEST, mine, objective, searchspace):
     import pandas as pd
     import numpy as np
     from baybe import Campaign
@@ -161,7 +166,7 @@ def _(mine, objective, searchspace):
     random_best_values = []
     current_best_random = -np.inf
 
-    for _ in range(20):
+    for _ in range(2 if SMOKE_TEST else 20):
         random_rec = random_campaign.recommend(batch_size=1)
         random_rec = mine.evaluate(random_rec)
         random_campaign.add_measurements(random_rec)
@@ -192,7 +197,7 @@ def _(mo):
 
 
 @app.cell
-def _(Campaign, mine, np, objective, pd, searchspace):
+def _(SMOKE_TEST, Campaign, mine, np, objective, pd, searchspace):
     baybe_campaign = Campaign(
         searchspace=searchspace,
         objective=objective,
@@ -202,7 +207,7 @@ def _(Campaign, mine, np, objective, pd, searchspace):
     baybe_best_values = []
     current_best_baybe = -np.inf
 
-    for _i in range(20):
+    for _i in range(2 if SMOKE_TEST else 20):
         baybe_rec = baybe_campaign.recommend(batch_size=1)
         baybe_rec = mine.evaluate(baybe_rec)
         baybe_campaign.add_measurements(baybe_rec)
@@ -319,11 +324,11 @@ def _(mo):
 
 
 @app.cell
-def _(mine, scenarios):
+def _(SMOKE_TEST, mine, scenarios):
     from baybe.simulation import simulate_scenarios
 
-    N_DOE_ITERATIONS = 4  # Number of optimization iterations per run - incraese to ~30 for better results
-    N_MC_ITERATIONS = 4  # Number of Monte Carlo runs - incraese to ~30 for better results
+    N_DOE_ITERATIONS = 2 if SMOKE_TEST else 4  # Number of optimization iterations per run - incraese to ~30 for better results
+    N_MC_ITERATIONS = 2 if SMOKE_TEST else 4  # Number of Monte Carlo runs - incraese to ~30 for better results
 
     results = simulate_scenarios(
         scenarios,
